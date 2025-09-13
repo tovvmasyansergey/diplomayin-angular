@@ -1,0 +1,73 @@
+<div class="welcome-container">
+
+
+  <!-- Декоративные линии по бокам -->
+  <div class="side-line left-line"></div>
+  <div class="side-line right-line"></div>
+
+  <!-- Декоративные линии сверху и снизу -->
+  <div class="top-line"></div>
+  <div class="bottom-line"></div>
+
+  <!-- Эффект дождика по краям -->
+  <div class="rain-effect left-rain"></div>
+  <div class="rain-effect right-rain"></div>
+  <div class="rain-effect top-rain"></div>
+  <div class="rain-effect bottom-rain"></div>
+  <!-- Навигационное меню -->
+      <nav class="top-navigation">
+        <div class="nav-links">
+          <a class="nav-link" routerLink="/">Home</a>
+          <a class="nav-link">Education</a>
+          <a class="nav-link">Contact</a>
+          <a class="nav-link">About Us</a>
+        </div>
+        <div class="nav-auth">
+          <a class="nav-link auth-link" (click)="navigateToLogin()">Sign In</a>
+          <a class="nav-link auth-link signup" (click)="navigateToRegister()">Sign Up</a>
+        </div>
+      </nav>
+  <div class="welcome-header">
+    <h1 class="welcome-title">
+      <span class="word">
+        <span class="letter">W</span>
+        <span class="letter">e</span>
+        <span class="letter">l</span>
+        <span class="letter">c</span>
+        <span class="letter">o</span>
+        <span class="letter">m</span>
+        <span class="letter">e</span>
+      </span>
+      <span class="word">
+        <span class="letter">t</span>
+        <span class="letter">o</span>
+      </span>
+      <span class="word">
+        <span class="letter">o</span>
+        <span class="letter">u</span>
+        <span class="letter">r</span>
+      </span>
+      <span class="word">
+        <span class="letter">w</span>
+        <span class="letter">o</span>
+        <span class="letter">r</span>
+        <span class="letter">k</span>
+        <span class="letter">s</span>
+        <span class="letter">p</span>
+        <span class="letter">a</span>
+        <span class="letter">c</span>
+        <span class="letter">e</span>
+      </span>
+    </h1>
+  </div>
+
+  <div class="content-section">
+    <p class="welcome-text">Добро пожаловать в наше рабочее пространство!</p>
+    <p class="description">Здесь вы можете начать работу с нашим приложением.</p>
+
+    <button class="nav-button mb-4" (click)="navigateToApp()">
+      <span class="button-text">Перейти к приложению</span>
+      <span class="button-icon">→</span>
+    </button>
+  </div>
+</div>

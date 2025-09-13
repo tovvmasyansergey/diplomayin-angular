@@ -1,0 +1,634 @@
+.welcome-container {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  overflow: visible;
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+/* Навигационное меню */
+.top-navigation {
+  position: relative;
+  top: 2cm;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: transparent;
+  z-index: 10;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-auth {
+  display: flex;
+  gap: 1rem;
+  margin-left: 2rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #4a5568;
+  font-weight: 600;
+  font-size: 1.1rem;
+  font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.8rem 1rem;
+  letter-spacing: 0.5px;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0.3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8B5CF6 0%, #A855F7 30%, #C084FC 60%, #DDD6FE 100%);
+  border-radius: 2px;
+  transition: all 0.4s ease;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.nav-link:hover {
+  color: #8B5CF6;
+  transform: translateY(-2px);
+  text-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+}
+
+.nav-link:hover::after {
+  width: 80%;
+  height: 4px;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.auth-link {
+  padding: 0.7rem 1.5rem;
+  border-radius: 30px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.auth-link:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.signup {
+  background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 100%);
+  color: white !important;
+  border: none;
+}
+
+.signup:hover {
+  background: linear-gradient(135deg, #A855F7 0%, #C084FC 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.welcome-header {
+  width: 100%;
+  text-align: center;
+  padding: 2rem 1rem 2rem 1rem;
+  margin-top: 6rem;
+}
+
+.welcome-title {
+  font-size: 4rem;
+  font-weight: 700;
+  margin: 0;
+  font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: -0.05em;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.word {
+  display: inline-block;
+  margin-right: 0.5em;
+}
+
+.letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(50px) scale(0.5);
+  animation: letterAppear 0.6s ease-out forwards, colorWave 4s ease-in-out infinite;
+  background: linear-gradient(90deg, #8B5CF6 0%, #A855F7 20%, #C084FC 40%, #DDD6FE 60%, #E879F9 80%, #8B5CF6 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 100%;
+}
+
+/* Задержки анимации для букв в слове "Welcome" */
+.word:nth-child(1) .letter:nth-child(1) { animation-delay: 0.1s, 0.7s; }
+.word:nth-child(1) .letter:nth-child(2) { animation-delay: 0.2s, 0.8s; }
+.word:nth-child(1) .letter:nth-child(3) { animation-delay: 0.3s, 0.9s; }
+.word:nth-child(1) .letter:nth-child(4) { animation-delay: 0.4s, 1.0s; }
+.word:nth-child(1) .letter:nth-child(5) { animation-delay: 0.5s, 1.1s; }
+.word:nth-child(1) .letter:nth-child(6) { animation-delay: 0.6s, 1.2s; }
+.word:nth-child(1) .letter:nth-child(7) { animation-delay: 0.7s, 1.3s; }
+
+/* Задержки анимации для слова "to" */
+.word:nth-child(2) .letter:nth-child(1) { animation-delay: 0.8s, 1.4s; }
+.word:nth-child(2) .letter:nth-child(2) { animation-delay: 0.9s, 1.5s; }
+
+/* Задержки анимации для слова "our" */
+.word:nth-child(3) .letter:nth-child(1) { animation-delay: 1.0s, 1.6s; }
+.word:nth-child(3) .letter:nth-child(2) { animation-delay: 1.1s, 1.7s; }
+.word:nth-child(3) .letter:nth-child(3) { animation-delay: 1.2s, 1.8s; }
+
+/* Задержки анимации для слова "workspace" */
+.word:nth-child(4) .letter:nth-child(1) { animation-delay: 1.3s, 1.9s; }
+.word:nth-child(4) .letter:nth-child(2) { animation-delay: 1.4s, 2.0s; }
+.word:nth-child(4) .letter:nth-child(3) { animation-delay: 1.5s, 2.1s; }
+.word:nth-child(4) .letter:nth-child(4) { animation-delay: 1.6s, 2.2s; }
+.word:nth-child(4) .letter:nth-child(5) { animation-delay: 1.7s, 2.3s; }
+.word:nth-child(4) .letter:nth-child(6) { animation-delay: 1.8s, 2.4s; }
+.word:nth-child(4) .letter:nth-child(7) { animation-delay: 1.9s, 2.5s; }
+.word:nth-child(4) .letter:nth-child(8) { animation-delay: 2.0s, 2.6s; }
+.word:nth-child(4) .letter:nth-child(9) { animation-delay: 2.1s, 2.7s; }
+
+.welcome-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #8B5CF6 0%, #A855F7 20%, #C084FC 40%, #DDD6FE 60%, #E879F9 80%, #8B5CF6 100%);
+  background-size: 200% 100%;
+  animation: underlineAppear 0.8s ease-out 3.2s forwards, colorWave 4s ease-in-out 3.2s infinite;
+  border-radius: 2px;
+}
+
+@keyframes letterAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) scale(0.5);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes underlineAppear {
+  0% {
+    transform: translateX(-50%) scaleX(0);
+  }
+  100% {
+    transform: translateX(-50%) scaleX(1);
+  }
+}
+
+@keyframes colorWave {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 200% 50%;
+  }
+  75% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Декоративные линии по бокам */
+.side-line {
+  position: fixed;
+  width: 2px;
+  height: 60%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    #8B5CF6 20%,
+    #A855F7 40%,
+    #C084FC 60%,
+    #A855F7 80%,
+    transparent 100%);
+  animation: lineGlow 3s ease-in-out infinite, lineGather 6s ease-in-out infinite;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.left-line {
+  left: 1cm;
+  top: 20%;
+}
+
+.right-line {
+  right: 1cm;
+  top: 20%;
+}
+
+/* Горизонтальные линии сверху и снизу */
+.top-line, .bottom-line {
+  position: fixed;
+  height: 2px;
+  width: 60%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #8B5CF6 20%,
+    #A855F7 40%,
+    #C084FC 60%,
+    #A855F7 80%,
+    transparent 100%);
+  animation: lineGlow 3s ease-in-out infinite, lineGatherHorizontal 6s ease-in-out infinite;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.top-line {
+  top: 1cm;
+  left: 20%;
+}
+
+.bottom-line {
+  bottom: 1cm;
+  left: 20%;
+  animation-delay: 1.5s;
+}
+
+/* Эффект дождика по краям */
+.rain-effect {
+  position: fixed;
+  z-index: 1;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.left-rain {
+  left: 0.5cm;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 8px,
+    #8B5CF6 8px,
+    #8B5CF6 12px,
+    transparent 12px,
+    transparent 20px,
+    #A855F7 20px,
+    #A855F7 24px,
+    transparent 24px,
+    transparent 32px,
+    #C084FC 32px,
+    #C084FC 36px,
+    transparent 36px
+  );
+  animation: rainFall 3s linear infinite;
+}
+
+.right-rain {
+  right: 0.5cm;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 6px,
+    #C084FC 6px,
+    #C084FC 10px,
+    transparent 10px,
+    transparent 18px,
+    #A855F7 18px,
+    #A855F7 22px,
+    transparent 22px,
+    transparent 30px,
+    #8B5CF6 30px,
+    #8B5CF6 34px,
+    transparent 34px
+  );
+  animation: rainFall 3s linear infinite 1.5s;
+}
+
+.top-rain {
+  top: 0.5cm;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 10px,
+    #8B5CF6 10px,
+    #8B5CF6 14px,
+    transparent 14px,
+    transparent 24px,
+    #A855F7 24px,
+    #A855F7 28px,
+    transparent 28px,
+    transparent 38px,
+    #C084FC 38px,
+    #C084FC 42px,
+    transparent 42px
+  );
+  animation: rainFlow 4s linear infinite;
+}
+
+.bottom-rain {
+  bottom: 0.5cm;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 8px,
+    #C084FC 8px,
+    #C084FC 12px,
+    transparent 12px,
+    transparent 22px,
+    #A855F7 22px,
+    #A855F7 26px,
+    transparent 26px,
+    transparent 36px,
+    #8B5CF6 36px,
+    #8B5CF6 40px,
+    transparent 40px
+  );
+  animation: rainFlow 4s linear infinite 2s;
+}
+
+/* Анимации для декоративных элементов */
+@keyframes lineGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.1);
+  }
+}
+
+/* Анимации для эффекта дождика */
+@keyframes rainFall {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 40px;
+  }
+}
+
+@keyframes rainFlow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 50px 0;
+  }
+}
+
+/* Анимация схлопывания вертикальных линий */
+@keyframes lineGather {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  25% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(0.1);
+  }
+  75% {
+    transform: scaleY(0.3);
+  }
+}
+
+/* Анимация схлопывания горизонтальных линий */
+@keyframes lineGatherHorizontal {
+  0%, 100% {
+    transform: scaleX(1);
+  }
+  25% {
+    transform: scaleX(0.3);
+  }
+  50% {
+    transform: scaleX(0.1);
+  }
+  75% {
+    transform: scaleX(0.3);
+  }
+}
+
+.content-section {
+  text-align: center;
+  max-width: 600px;
+  margin-top: 2rem;
+}
+
+.welcome-text {
+  font-size: 1.5rem;
+  color: #4a5568;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  padding: 10px;
+}
+
+.description {
+  font-size: 1.1rem;
+  color: #718096;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+/* Кнопка навигации */
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #C084FC 100%);
+  border: none;
+  border-radius: 50px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.nav-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, #A855F7 0%, #C084FC 50%, #DDD6FE 100%);
+}
+
+.nav-button:hover::before {
+  left: 100%;
+}
+
+.nav-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+.button-text {
+  position: relative;
+  z-index: 1;
+}
+
+.button-icon {
+  position: relative;
+  z-index: 1;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.nav-button:hover .button-icon {
+  transform: translateX(5px);
+}
+
+@media screen and (max-width: 650px) {
+  .welcome-container {
+    padding: 1rem;
+  }
+
+  .welcome-title {
+    font-size: 2.5rem;
+    line-height: 1.3;
+  }
+
+  .welcome-header {
+    padding: 2rem 1rem 1.5rem 1rem;
+  }
+
+  .welcome-text {
+    font-size: 1.2rem;
+  }
+
+  .description {
+    font-size: 1rem;
+  }
+}
+
+/* Дополнительный перенос для средних экранов */
+@media screen and (max-width: 600px) {
+  .word {
+    margin-right: 0.3em;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .welcome-container {
+    padding: 0.5rem;
+  }
+
+  .welcome-title {
+    font-size: 2rem;
+    line-height: 1.3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2em;
+  }
+
+  .word {
+    margin-right: 0;
+    margin-bottom: 0;
+    display: block;
+    line-height: 1.2;
+  }
+
+  .welcome-header {
+    padding: 1.5rem 0.5rem 1rem 0.5rem;
+    margin-top: 2rem;
+  }
+
+  /* Адаптивное меню */
+  .top-navigation {
+    padding: 0.8rem 1rem;
+    top: 1.5cm;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav-links {
+    gap: 1rem;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .nav-auth {
+    gap: 0.5rem;
+    margin-left: 1rem;
+  }
+
+  .nav-link {
+    font-size: 1rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .auth-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .word {
+    margin-right: 0.2em;
+  }
+
+  .welcome-text {
+    font-size: 1.1rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+    padding: 23px;
+    margin-bottom: 1.5rem;
+  }
+
+  .nav-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+}

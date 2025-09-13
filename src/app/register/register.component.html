@@ -1,0 +1,66 @@
+<div class="register-container">
+  <!-- Декоративные элементы -->
+  <div class="side-line left-line"></div>
+  <div class="side-line right-line"></div>
+  <div class="top-line"></div>
+  <div class="bottom-line"></div>
+  <div class="rain-effect left-rain"></div>
+  <div class="rain-effect right-rain"></div>
+  <div class="rain-effect top-rain"></div>
+  <div class="rain-effect bottom-rain"></div>
+
+  <!-- Навигационное меню -->
+  <nav class="top-navigation">
+
+    <div class="nav-auth">
+      <a class="nav-link auth-link" (click)="navigateToLogin()">Sign In</a>
+      <a class="nav-link auth-link signup active">Sign Up</a>
+    </div>
+  </nav>
+
+  <!-- Форма регистрации -->
+  <div class="auth-form-container">
+    <div class="auth-form">
+      <h1 class="form-title">Create Account</h1>
+      <p class="form-subtitle">Join us today</p>
+
+      <form class="register-form" (ngSubmit)="onRegister()">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" [(ngModel)]="username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" [(ngModel)]="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" [(ngModel)]="password" required>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" [(ngModel)]="confirmPassword" required>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="agreeTerms" name="agreeTerms" required>
+            <span class="checkmark"></span>
+            I agree to the <a href="#" class="terms-link">Terms and Conditions</a>
+          </label>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+        </button>
+      </form>
+
+          <div class="form-footer">
+            <p>Already have an account? <a (click)="navigateToLogin()">Sign in</a></p>
+          </div>
+    </div>
+  </div>
+</div>

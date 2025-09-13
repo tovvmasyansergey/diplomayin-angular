@@ -1,0 +1,86 @@
+<div class="login-container">
+  <!-- Декоративные элементы -->
+  <div class="side-line left-line"></div>
+  <div class="side-line right-line"></div>
+  <div class="top-line"></div>
+  <div class="bottom-line"></div>
+  <div class="rain-effect left-rain"></div>
+  <div class="rain-effect right-rain"></div>
+  <div class="rain-effect top-rain"></div>
+  <div class="rain-effect bottom-rain"></div>
+
+  <!-- Навигационное меню -->
+  <nav class="top-navigation">
+    <div class="nav-links">
+      <a class="nav-link" (click)="navigateToHome()">Home</a>
+      <a class="nav-link">Education</a>
+      <a class="nav-link">Contact</a>
+      <a class="nav-link">About Us</a>
+    </div>
+    <div class="nav-auth">
+      <a class="nav-link auth-link active">Sign In</a>
+      <a class="nav-link auth-link signup" (click)="navigateToRegister()">Sign Up</a>
+    </div>
+  </nav>
+
+  <div class="auth-form-container">
+    <div class="auth-form">
+      <h1 class="form-title">Welcome Back</h1>
+      <p class="form-subtitle">Sign in to your account</p>
+
+      <!-- Отображение ошибок -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <form class="login-form" (ngSubmit)="onLogin()">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            [(ngModel)]="username"
+            [disabled]="isLoading"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            [(ngModel)]="password"
+            [disabled]="isLoading"
+            required>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="rememberMe"
+              name="rememberMe"
+              [disabled]="isLoading">
+            <span class="checkmark"></span>
+            Remember me
+          </label>
+          <a href="#" class="forgot-password">Forgot password?</a>
+        </div>
+
+        <button
+          type="submit"
+          class="submit-btn"
+          [disabled]="isLoading">
+          <span *ngIf="!isLoading">Sign In</span>
+          <span *ngIf="isLoading">Signing In...</span>
+        </button>
+      </form>
+
+      <div class="form-footer">
+        <p>Don't have an account? <a (click)="navigateToRegister()">Sign up</a></p>
+      </div>
+    </div>
+  </div>
+</div>
