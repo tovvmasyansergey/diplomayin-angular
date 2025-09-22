@@ -28,4 +28,20 @@ export class WelcomeComponent {
   navigateToRegister(event?: Event) {
     this.router.navigate(['/register']);
   }
+
+  navigateToEducation() {
+    this.router.navigate(['/education']);
+  }
+
+  navigateToContact() {
+    this.router.navigate(['/contact']);
+  }
+
+  navigateToAbout() {
+    this.router.navigate(['/about']);
+  }
+
+  navigateToAllUsers() {
+    this.router.navigate(['/all-users']);
+  }
 }

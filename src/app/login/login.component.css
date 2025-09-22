@@ -328,6 +328,60 @@
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
+/* Стили для контейнера пароля */
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container input {
+  padding-right: 3rem; /* Место для кнопки глаза */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+}
+
+.password-toggle-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.password-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.eye-icon {
+  color: #718096;
+  transition: all 0.2s ease;
+  width: 20px;
+  height: 20px;
+}
+
+.password-toggle-btn:hover .eye-icon {
+  color: #8B5CF6;
+}
+
+.eye-icon.strikethrough {
+  opacity: 0.4;
+  filter: grayscale(100%);
+}
+
 .form-options {
   display: flex;
   justify-content: space-between;

@@ -1,0 +1,181 @@
+<div class="all-users-container">
+  <!-- Декоративные линии по бокам -->
+  <div class="side-line left-line"></div>
+  <div class="side-line right-line"></div>
+  <!-- Декоративные линии сверху и снизу -->
+  <div class="top-line"></div>
+  <div class="bottom-line"></div>
+  <!-- Эффект дождика по краям -->
+  <div class="rain-effect left-rain"></div>
+  <div class="rain-effect right-rain"></div>
+  <div class="rain-effect top-rain"></div>
+  <div class="rain-effect bottom-rain"></div>
+  <!-- Дополнительные капли дождя -->
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
+
+  <!-- Навигационное меню -->
+  <nav class="top-navigation">
+    <div class="nav-links">
+      <a class="nav-link" (click)="navigateToHome()">Home</a>
+      <a class="nav-link" (click)="navigateToEducation()">Education</a>
+      <a class="nav-link" (click)="navigateToContact()">Contact</a>
+      <a class="nav-link" (click)="navigateToAbout()">About Us</a>
+    </div>
+  </nav>
+
+  <!-- Заголовок -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <span class="word">
+        <span class="letter">A</span>
+        <span class="letter">l</span>
+        <span class="letter">l</span>
+      </span>
+      <span class="word">
+        <span class="letter">U</span>
+        <span class="letter">s</span>
+        <span class="letter">e</span>
+        <span class="letter">r</span>
+        <span class="letter">s</span>
+      </span>
+    </h1>
+    <p class="page-subtitle">Connect with our community members</p>
+  </div>
+
+  <!-- Контент -->
+  <div class="content-section">
+    <!-- Загрузка -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Loading users...</p>
+    </div>
+
+    <!-- Ошибка -->
+    <div *ngIf="errorMessage && !isLoading" class="error-container">
+      <div class="error-icon">⚠️</div>
+      <p class="error-text">{{ errorMessage }}</p>
+      <button class="retry-btn" (click)="loadUsers()">Try Again</button>
+    </div>
+
+    <!-- Список пользователей -->
+    <div *ngIf="!isLoading && !errorMessage" class="users-grid">
+      <div *ngFor="let user of users" class="user-card">
+        <!-- Аватар -->
+        <div class="user-avatar">
+          <img
+            *ngIf="user.profilePicture"
+            [src]="user.profilePicture"
+            [alt]="user.firstname + ' ' + user.lastname"
+            class="avatar-image">
+          <div *ngIf="!user.profilePicture" class="avatar-placeholder">
+            {{ getInitials(user) }}
+          </div>
+        </div>
+
+        <!-- Информация о пользователе -->
+        <div class="user-info">
+          <h3 class="user-name">{{ user.firstname }} {{ user.lastname }}</h3>
+          <p class="user-email">{{ user.email }}</p>
+          <p class="user-phone">{{ user.phone }}</p>
+          <p *ngIf="user.location" class="user-location">📍 {{ user.location }}</p>
+          <span *ngIf="user.role" class="user-role">{{ user.role }}</span>
+        </div>
+
+        <!-- Кнопка чата -->
+        <div class="user-actions">
+          <button class="chat-btn" (click)="startChat(user)">
+            <svg class="chat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span class="chat-text">Start Chat</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  <!-- Пустое состояние -->
+  <div *ngIf="!isLoading && !errorMessage && users.length === 0" class="empty-state">
+    <div class="empty-icon">👥</div>
+    <h3 class="empty-title">No users found</h3>
+    <p class="empty-text">There are no users to display at the moment.</p>
+  </div>
+
+  <!-- Плавающая кнопка чата -->
+  <div class="floating-chat-btn" (click)="openChatModal()">
+    <svg class="chat-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span class="chat-text">AI Chat</span>
+  </div>
+
+  <!-- Модальное окно чата -->
+  <div *ngIf="showChatModal" class="chat-modal-overlay" (click)="closeChatModal()">
+    <div class="chat-modal" (click)="$event.stopPropagation()">
+      <div class="chat-header">
+        <h3 class="chat-title">AI Assistant</h3>
+        <button class="close-btn" (click)="closeChatModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="chat-options">
+        <button class="chat-option-btn" (click)="startAdminChat()">
+          <svg class="option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Chat with Admin</span>
+        </button>
+        
+        <button class="chat-option-btn" (click)="startAIChat()">
+          <svg class="option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+          </svg>
+          <span>AI Assistant</span>
+        </button>
+        
+        <button class="chat-option-btn" (click)="startGPTChat()">
+          <svg class="option-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+          <span>GPT Chat</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

@@ -1,0 +1,211 @@
+<div class="about-container">
+  <div class="side-line left-line"></div>
+  <div class="side-line right-line"></div>
+  <div class="top-line"></div>
+  <div class="bottom-line"></div>
+  <div class="rain-effect left-rain"></div>
+  <div class="rain-effect right-rain"></div>
+  <div class="rain-effect top-rain"></div>
+  <div class="rain-effect bottom-rain"></div>
+  
+  <nav class="top-navigation">
+    <div class="nav-links">
+      <a class="nav-link" (click)="navigateToHome()">Home</a>
+      <a class="nav-link" (click)="navigateToEducation()">Education</a>
+      <a class="nav-link" (click)="navigateToContact()">Contact</a>
+      <a class="nav-link active">About Us</a>
+    </div>
+    <div class="nav-auth">
+      <a class="nav-link auth-link" (click)="navigateToLogin()">Sign In</a>
+      <a class="nav-link auth-link signup" (click)="navigateToRegister()">Sign Up</a>
+    </div>
+  </nav>
+  
+  <div class="about-content">
+    <!-- Заголовок -->
+    <div class="about-header">
+      <h1 class="page-title">About Us</h1>
+      <p class="page-subtitle">Discover our story, mission, and the people behind our success</p>
+    </div>
+
+    <!-- Основная информация -->
+    <div class="main-story">
+      <div class="story-content">
+        <div class="story-text">
+          <h2 class="section-title">Our Story</h2>
+          <p class="story-paragraph">
+            Welcome to our digital space! We are a passionate team of innovators, creators, and problem-solvers 
+            dedicated to building exceptional experiences through technology. Our journey began with a simple 
+            vision: to create meaningful connections between people and technology.
+          </p>
+          <p class="story-paragraph">
+            Over the years, we've grown from a small startup into a dynamic organization that values creativity, 
+            collaboration, and continuous learning. Every project we undertake is driven by our commitment to 
+            excellence and our belief in the transformative power of well-crafted digital solutions.
+          </p>
+          <p class="story-paragraph">
+            Today, we continue to push boundaries, explore new possibilities, and help our clients achieve 
+            their goals through innovative technology solutions. Our story is still being written, and we're 
+            excited about the chapters yet to come.
+          </p>
+        </div>
+        <div class="story-image">
+          <div class="image-placeholder">
+            <div class="image-icon">🏢</div>
+            <p>Our Office</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Миссия и ценности -->
+    <div class="mission-values">
+      <div class="mission-card">
+        <div class="card-icon">🎯</div>
+        <h3 class="card-title">Our Mission</h3>
+        <p class="card-description">
+          To empower businesses and individuals through innovative technology solutions that simplify 
+          complex problems and create meaningful impact in the digital world.
+        </p>
+      </div>
+      
+      <div class="mission-card">
+        <div class="card-icon">💡</div>
+        <h3 class="card-title">Our Vision</h3>
+        <p class="card-description">
+          To be the leading force in creating user-centered digital experiences that bridge the gap 
+          between technology and human needs, making the digital world more accessible and intuitive.
+        </p>
+      </div>
+      
+      <div class="mission-card">
+        <div class="card-icon">⭐</div>
+        <h3 class="card-title">Our Values</h3>
+        <p class="card-description">
+          Innovation, integrity, collaboration, and continuous learning guide everything we do. 
+          We believe in building lasting relationships and delivering solutions that exceed expectations.
+        </p>
+      </div>
+    </div>
+
+    <!-- Команда -->
+    <div class="team-section">
+      <h2 class="section-title">Meet Our Team</h2>
+      <div class="team-grid">
+        <div class="team-member">
+          <div class="member-photo">
+            <div class="photo-placeholder">
+              <div class="photo-icon">👨‍💻</div>
+            </div>
+          </div>
+          <h4 class="member-name">Alex Johnson</h4>
+          <p class="member-role">Lead Developer</p>
+          <p class="member-bio">
+            Passionate about clean code and innovative solutions. 8+ years of experience in full-stack development.
+          </p>
+        </div>
+        
+        <div class="team-member">
+          <div class="member-photo">
+            <div class="photo-placeholder">
+              <div class="photo-icon">👩‍🎨</div>
+            </div>
+          </div>
+          <h4 class="member-name">Sarah Chen</h4>
+          <p class="member-role">UI/UX Designer</p>
+          <p class="member-bio">
+            Creative designer with a keen eye for detail and user experience. Loves creating beautiful, functional interfaces.
+          </p>
+        </div>
+        
+        <div class="team-member">
+          <div class="member-photo">
+            <div class="photo-placeholder">
+              <div class="photo-icon">👨‍💼</div>
+            </div>
+          </div>
+          <h4 class="member-name">Michael Rodriguez</h4>
+          <p class="member-role">Project Manager</p>
+          <p class="member-bio">
+            Expert in agile methodologies and team coordination. Ensures projects are delivered on time and within budget.
+          </p>
+        </div>
+        
+        <div class="team-member">
+          <div class="member-photo">
+            <div class="photo-placeholder">
+              <div class="photo-icon">👩‍🔬</div>
+            </div>
+          </div>
+          <h4 class="member-name">Emily Watson</h4>
+          <p class="member-role">Data Scientist</p>
+          <p class="member-bio">
+            Data enthusiast who transforms complex information into actionable insights and intelligent solutions.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Достижения -->
+    <div class="achievements-section">
+      <h2 class="section-title">Our Achievements</h2>
+      <div class="achievements-grid">
+        <div class="achievement-item">
+          <div class="achievement-number">50+</div>
+          <div class="achievement-label">Projects Completed</div>
+        </div>
+        <div class="achievement-item">
+          <div class="achievement-number">25+</div>
+          <div class="achievement-label">Happy Clients</div>
+        </div>
+        <div class="achievement-item">
+          <div class="achievement-number">5+</div>
+          <div class="achievement-label">Years Experience</div>
+        </div>
+        <div class="achievement-item">
+          <div class="achievement-number">100%</div>
+          <div class="achievement-label">Client Satisfaction</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Социальные сети -->
+    <div class="social-section">
+      <h2 class="section-title">Connect With Us</h2>
+      <p class="social-description">
+        Follow us on social media to stay updated with our latest projects, insights, and company news.
+      </p>
+      <div class="social-links">
+        <button class="social-btn linkedin" (click)="openLinkedIn()">
+          <span class="social-icon">💼</span>
+          <span class="social-text">LinkedIn</span>
+        </button>
+        <button class="social-btn github" (click)="openGitHub()">
+          <span class="social-icon">💻</span>
+          <span class="social-text">GitHub</span>
+        </button>
+        <button class="social-btn twitter" (click)="openTwitter()">
+          <span class="social-icon">🐦</span>
+          <span class="social-text">Twitter</span>
+        </button>
+        <button class="social-btn instagram" (click)="openInstagram()">
+          <span class="social-icon">📸</span>
+          <span class="social-text">Instagram</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Призыв к действию -->
+    <div class="cta-section">
+      <h2 class="cta-title">Ready to Work Together?</h2>
+      <p class="cta-description">
+        We're always excited to meet new people and explore new opportunities. 
+        Whether you have a project in mind or just want to say hello, we'd love to hear from you!
+      </p>
+      <div class="cta-buttons">
+        <button class="cta-btn primary" (click)="navigateToContact()">Get In Touch</button>
+        <button class="cta-btn secondary" (click)="navigateToEducation()">Learn More</button>
+      </div>
+    </div>
+  </div>
+</div>

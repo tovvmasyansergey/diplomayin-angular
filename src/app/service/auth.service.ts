@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
-import {AuthResponseModel} from '../models/user-model/auth-response.model';
+import {LoginRequestModel} from '../models/user-model/login.request.model';
 import {LoginCredentialsModel} from '../models/user-model/login-credentials.model';
 import {EmployeeVerifyModel} from '../models/user-model/employee-verify.model';
 import {EmailRequestModel} from '../models/user-model/email-request.model';
@@ -24,19 +24,19 @@ export class AuthService {
   ) {
   }
 
-  register(registerDto: RegisterRequestModel): Observable<any> {
-    const path = `${this.BASE_PATH}auth/register`;
-    return this.http.post<any>(path, registerDto);
+  register(registerDto: RegisterRequestModel): Observable<string> {
+    const path = `${this.BASE_PATH}auth/signup`;
+    return this.http.post(path, registerDto, {responseType: 'text'});
   }
 
-  auth(credentialsDto: LoginCredentialsModel): Observable<AuthResponseModel> {
+  auth(credentialsDto: LoginCredentialsModel): Observable<LoginRequestModel> {
     const path = `${this.BASE_PATH}auth/login`;
-    return this.http.post<AuthResponseModel>(path, credentialsDto);
+    return this.http.post<LoginRequestModel>(path, credentialsDto);
   }
 
-  verify(verifyDto: EmployeeVerifyModel): Observable<AuthResponseModel> {
+  verify(verifyDto: EmployeeVerifyModel): Observable<LoginRequestModel> {
     const path = `${this.BASE_PATH}auth/verify-email`;
-    return this.http.post<AuthResponseModel>(path, verifyDto);
+    return this.http.post<LoginRequestModel>(path, verifyDto);
   }
 
   changePassword(verifyDto: EmployeeVerifyModel): Observable<void> {
@@ -64,11 +64,11 @@ export class AuthService {
     return this.http.post<boolean>(path, requestDto);
   }
 
-  saveToken(employee: AuthResponseModel): void {
-    if (employee.token != null) {
-      localStorage.setItem('token', employee.token);
-    }
-    localStorage.setItem('currentUser', JSON.stringify(employee));
+  saveToken(employee: LoginRequestModel): void {
+    // if (employee.token != null) {
+    //   localStorage.setItem('token', employee.token);
+    // }
+    // localStorage.setItem('currentUser', JSON.stringify(employee));
   }
 
   getToken(): string | null {
@@ -81,7 +81,7 @@ export class AuthService {
     this.route.navigate(['/']).then().catch();
   }
 
-  getCurrentUser(): AuthResponseModel | null {
+  getCurrentUser(): LoginRequestModel | null {
     const user = localStorage.getItem('currentUser');
     return user ? JSON.parse(user) : null;
   }
@@ -91,7 +91,7 @@ export class AuthService {
   }
 
   updateCurrentUserProfilePicture(pic: string) {
-    const currentUser: AuthResponseModel | null = this.getCurrentUser();
+    const currentUser: LoginRequestModel | null = this.getCurrentUser();
     if (currentUser) {
       // Добавляем поле profilePicture если нужно
       (currentUser as any).profilePicture = pic;
@@ -99,7 +99,7 @@ export class AuthService {
     }
   }
 
-  setCurrentUser(currentUser: AuthResponseModel): void {
+  setCurrentUser(currentUser: LoginRequestModel): void {
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
   }
 

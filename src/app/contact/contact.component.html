@@ -1,0 +1,129 @@
+<div class="contact-container">
+  <div class="side-line left-line"></div>
+  <div class="side-line right-line"></div>
+  <div class="top-line"></div>
+  <div class="bottom-line"></div>
+  <div class="rain-effect left-rain"></div>
+  <div class="rain-effect right-rain"></div>
+  <div class="rain-effect top-rain"></div>
+  <div class="rain-effect bottom-rain"></div>
+
+  <nav class="top-navigation">
+    <div class="nav-links">
+      <a class="nav-link" (click)="navigateToHome()">Home</a>
+      <a class="nav-link" (click)="navigateToEducation()">Education</a>
+      <a class="nav-link active">Contact</a>
+      <a class="nav-link" (click)="navigateToAbout()">About Us</a>
+    </div>
+    <div class="nav-auth">
+      <a class="nav-link auth-link" (click)="navigateToLogin()">Sign In</a>
+      <a class="nav-link auth-link signup" (click)="navigateToRegister()">Sign Up</a>
+    </div>
+  </nav>
+
+  <div class="contact-content">
+    <div class="contact-header">
+      <h1 class="page-title">Get In Touch</h1>
+      <p class="page-subtitle">Let's connect and start a conversation</p>
+    </div>
+
+    <!-- Контактная информация -->
+    <div class="contact-info-grid">
+      <!-- Телефон -->
+      <div class="contact-card">
+        <div class="contact-icon">📞</div>
+        <h3 class="contact-title">Phone</h3>
+        <p class="contact-details">+1 (234) 567-8900</p>
+        <button class="contact-action-btn" (click)="makeCall()">Call Now</button>
+      </div>
+
+      <!-- Email -->
+      <div class="contact-card">
+        <div class="contact-icon">✉️</div>
+        <h3 class="contact-title">Email</h3>
+        <p class="contact-details">contact@example.com</p>
+        <button class="contact-action-btn" (click)="sendEmail()">Send Email</button>
+      </div>
+
+      <!-- LinkedIn -->
+      <div class="contact-card">
+        <div class="contact-icon">💼</div>
+        <h3 class="contact-title">LinkedIn</h3>
+        <p class="contact-details">linkedin.com/in/yourprofile</p>
+        <button class="contact-action-btn" (click)="openLinkedIn()">Connect</button>
+      </div>
+
+      <!-- GitHub -->
+      <div class="contact-card">
+        <div class="contact-icon">💻</div>
+        <h3 class="contact-title">GitHub</h3>
+        <p class="contact-details">github.com/yourusername</p>
+        <button class="contact-action-btn" (click)="openGitHub()">View Profile</button>
+      </div>
+    </div>
+
+    <!-- Дополнительная информация -->
+    <div class="additional-info">
+      <div class="info-section">
+        <h2 class="section-title">Working Hours</h2>
+        <div class="working-hours">
+          <div class="time-slot">
+            <span class="day">Monday - Friday</span>
+            <span class="time">9:00 AM - 6:00 PM</span>
+          </div>
+          <div class="time-slot">
+            <span class="day">Saturday</span>
+            <span class="time">10:00 AM - 4:00 PM</span>
+          </div>
+          <div class="time-slot">
+            <span class="day">Sunday</span>
+            <span class="time">Closed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2 class="section-title">Location</h2>
+        <div class="location-info">
+          <div class="location-icon">📍</div>
+          <div class="location-details">
+            <p class="address">123 Main Street</p>
+            <p class="city">New York, NY 10001</p>
+            <p class="country">United States</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h2 class="section-title">Response Time</h2>
+        <div class="response-info">
+          <div class="response-item">
+            <span class="response-type">Email</span>
+            <span class="response-time">Within 24 hours</span>
+          </div>
+          <div class="response-item">
+            <span class="response-type">Phone</span>
+            <span class="response-time">Immediate</span>
+          </div>
+          <div class="response-item">
+            <span class="response-type">Social Media</span>
+            <span class="response-time">Within 12 hours</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Призыв к действию -->
+    <div class="cta-section">
+      <h2 class="cta-title">Ready to Work Together?</h2>
+      <p class="cta-description">
+        I'm always excited to discuss new opportunities, collaborate on interesting projects,
+        or simply have a friendly conversation about technology and innovation.
+      </p>
+      <div class="cta-buttons">
+        <button class="cta-btn primary" (click)="sendEmail()">Start a Project</button>
+        <button class="cta-btn secondary" (click)="makeCall()">Schedule a Call</button>
+      </div>
+    </div>
+  </div>
+</div>

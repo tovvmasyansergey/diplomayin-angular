@@ -19,6 +19,7 @@ export class LoginComponent {
   rememberMe: boolean = false;
   isLoading: boolean = false;
   errorMessage: string = '';
+  showPassword: boolean = false;
 
   constructor(
     private router: Router,
@@ -41,7 +42,6 @@ export class LoginComponent {
       next: (response) => {
         this.isLoading = false;
         // Сохраняем токен и данные пользователя
-        this.authService.saveToken(response);
 
         // Перенаправляем на главную страницу
         this.router.navigate(['/']).then(() => {
@@ -76,5 +76,21 @@ export class LoginComponent {
 
   navigateToRegister() {
     this.router.navigate(['/register']);
+  }
+
+  navigateToEducation() {
+    this.router.navigate(['/education']);
+  }
+
+  navigateToContact() {
+    this.router.navigate(['/contact']);
+  }
+
+  navigateToAbout() {
+    this.router.navigate(['/about']);
+  }
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 }

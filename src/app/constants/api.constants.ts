@@ -1,5 +1,5 @@
 export const API_CONSTANTS = {
-  BASE_PATH: 'http://localhost:8800/api/',
+  BASE_PATH: 'http://localhost:7404/',
   VERSION: 'v1/',
   ENDPOINTS: {
     LOGIN: 'login',

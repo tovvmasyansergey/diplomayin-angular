@@ -14,13 +14,16 @@
   <div class="rain-effect right-rain"></div>
   <div class="rain-effect top-rain"></div>
   <div class="rain-effect bottom-rain"></div>
+  <div class="rain-effect"></div>
+  <div class="rain-effect"></div>
   <!-- Навигационное меню -->
       <nav class="top-navigation">
         <div class="nav-links">
           <a class="nav-link" routerLink="/">Home</a>
-          <a class="nav-link">Education</a>
-          <a class="nav-link">Contact</a>
-          <a class="nav-link">About Us</a>
+          <a class="nav-link" (click)="navigateToEducation()">Education</a>
+          <a class="nav-link" (click)="navigateToContact()">Contact</a>
+          <a class="nav-link" (click)="navigateToAbout()">About Us</a>
+          <a class="nav-link" (click)="navigateToAllUsers()">All Users</a>
         </div>
         <div class="nav-auth">
           <a class="nav-link auth-link" (click)="navigateToLogin()">Sign In</a>
