@@ -25,6 +25,10 @@ export class RegisterComponent {
   isLoading: boolean = false;
   showPassword: boolean = false;
   showConfirmPassword: boolean = false;
+  
+  // File upload properties
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
 
   // Validation errors
   emailError: string = '';
@@ -33,6 +37,7 @@ export class RegisterComponent {
   firstnameError: string = '';
   lastnameError: string = '';
   phoneError: string = '';
+  fileError: string = '';
 
   constructor(
     private router: Router,
@@ -50,28 +55,37 @@ export class RegisterComponent {
     }
     this.isLoading = true;
 
-    const registerData: RegisterRequestModel = {
-      email: this.email,
-      password: this.password,
-      firstname: this.firstname,
-      lastname: this.lastname,
-      phone: this.phone,
-      location: this.location || undefined
-    };
+    // Создаем FormData для отправки всех данных
+    const formData = new FormData();
+    formData.append('email', this.email);
+    formData.append('password', this.password);
+    formData.append('firstname', this.firstname);
+    formData.append('lastname', this.lastname);
+    formData.append('phone', this.phone);
+    
+    if (this.location) {
+      formData.append('location', this.location);
+    }
+    
+    if (this.selectedFile) {
+      formData.append('profilePicture', this.selectedFile);
+    }
 
-    this.authService.register(registerData).subscribe({
+    this.authService.register(formData).subscribe({
       next: () => {
         this.router.navigate(['/app']);
       },
-      error: (error: { error: { message: any; }; }) => {
-        console.error(1);
+      error: (error) => {
+        console.error('Registration error:', error);
         this.isLoading = false;
+        alert('Registration failed. Please try again.');
       },
       complete: () => {
         this.isLoading = false;
       }
     });
   }
+
 
   navigateToHome() {
     this.router.navigate(['/']);
@@ -99,6 +113,49 @@ export class RegisterComponent {
 
   toggleConfirmPasswordVisibility() {
     this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  // File upload methods
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.validateFile(file);
+    }
+  }
+
+  validateFile(file: File): void {
+    this.fileError = '';
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      this.fileError = 'Please select an image file';
+      return;
+    }
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      this.fileError = 'File size must be less than 5MB';
+      return;
+    }
+
+    // If validation passes, set the file and create preview
+    this.selectedFile = file;
+    this.createImagePreview(file);
+  }
+
+  createImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.imagePreview = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeFile(): void {
+    this.selectedFile = null;
+    this.imagePreview = null;
+    this.fileError = '';
   }
 
   // Validation methods

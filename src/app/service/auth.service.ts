@@ -9,7 +9,7 @@ import {EmailRequestModel} from '../models/user-model/email-request.model';
 import {EmployeeForgotPasswordResponseModel} from '../models/user-model/employee-forgot-password-response.model';
 import {EmployeeResponseModel} from '../models/user-model/employee-response.model';
 import {RegisterRequestModel} from '../models/user-model/register-request.model';
-import {API_CONSTANTS} from '../../../../diplomayin-angular/src/app/constants/api.constants';
+import {API_CONSTANTS} from '../constants/api.constants';
 
 @Injectable({
   providedIn: 'root'
@@ -24,9 +24,24 @@ export class AuthService {
   ) {
   }
 
-  register(registerDto: RegisterRequestModel): Observable<string> {
+  register(formData: FormData): Observable<string> {
     const path = `${this.BASE_PATH}auth/signup`;
-    return this.http.post(path, registerDto, {responseType: 'text'});
+    return this.http.post(path, formData, {responseType: 'text'});
+  }
+
+  getAllUsers(page: number = 0, size: number = 15): Observable<any> {
+    const path = `${this.BASE_PATH}auth/users?page=${page}&size=${size}`;
+    return this.http.get<any>(path);
+  }
+
+  editUser(userId: number, formData: FormData): Observable<string> {
+    const path = `${this.BASE_PATH}auth/edit/${userId}`;
+    return this.http.put(path, formData, {responseType: 'text'});
+  }
+
+  deleteUser(userId: number): Observable<string> {
+    const path = `${this.BASE_PATH}auth/delete/${userId}`;
+    return this.http.delete(path, {responseType: 'text'});
   }
 
   auth(credentialsDto: LoginCredentialsModel): Observable<LoginRequestModel> {
