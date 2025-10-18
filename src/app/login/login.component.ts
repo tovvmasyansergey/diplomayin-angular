@@ -41,7 +41,16 @@ export class LoginComponent {
     this.authService.auth(credentials).subscribe({
       next: (response) => {
         this.isLoading = false;
+        console.log('=== LOGIN RESPONSE ===');
+        console.log('Full response:', response);
+        console.log('Response type:', typeof response);
+        console.log('Response keys:', Object.keys(response));
+        console.log('Token in response:', response.token);
+        console.log('=====================');
+        
         // Сохраняем токен и данные пользователя
+        this.authService.saveToken(response);
+        console.log('Login successful, token saved:', response);
 
         // Перенаправляем на главную страницу
         this.router.navigate(['/']).then(() => {

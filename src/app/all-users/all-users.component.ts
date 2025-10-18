@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../service/user.service';
@@ -19,7 +19,7 @@ export interface User {
 @Component({
   selector: 'app-all-users',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './all-users.component.html',
   styleUrl: './all-users.component.css'
 })
@@ -112,9 +112,14 @@ export class AllUsersComponent implements OnInit {
   }
 
   startChat(user: User): void {
-    // TODO: Implement chat functionality
     console.log('Starting chat with user:', user);
-    alert(`Starting chat with ${user.firstname} ${user.lastname}`);
+    // Переходим к чату с выбранным пользователем
+    this.router.navigate(['/chat'], { 
+      queryParams: { 
+        userId: user.id, 
+        userName: `${user.firstname} ${user.lastname}` 
+      } 
+    });
   }
 
   getInitials(user: User): string {

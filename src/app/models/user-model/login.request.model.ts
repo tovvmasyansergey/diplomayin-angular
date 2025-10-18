@@ -1,4 +1,5 @@
 export class LoginRequestModel {
+  id?: number;
   email: string | undefined;
   password: string | undefined;
   firstname?: string;
@@ -6,4 +7,5 @@ export class LoginRequestModel {
   phone?: string;
   profilePicture?: string;
   location?: string;
+  token?: string;
 }

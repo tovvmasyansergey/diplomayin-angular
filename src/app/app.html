@@ -1,1 +1,51 @@
-<router-outlet></router-outlet>
+<div class="app-container">
+  <router-outlet></router-outlet>
+</div>
+
+<style>
+.app-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Принудительное применение стилей для чата */
+app-chat {
+  display: block;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+app-chat .chat-container {
+  display: flex;
+  max-width: 1200px;
+  min-width: 1200px;
+  min-height: 700px;
+  max-height: 700px;
+  margin: 20px auto;
+  border: none;
+  background-color: #fff;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+</style>

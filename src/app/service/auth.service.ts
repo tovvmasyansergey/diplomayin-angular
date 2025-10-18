@@ -80,10 +80,21 @@ export class AuthService {
   }
 
   saveToken(employee: LoginRequestModel): void {
-    // if (employee.token != null) {
-    //   localStorage.setItem('token', employee.token);
-    // }
-    // localStorage.setItem('currentUser', JSON.stringify(employee));
+    console.log('=== SAVING TOKEN ===');
+    console.log('Employee object:', employee);
+    console.log('Token value:', employee.token);
+    console.log('Token type:', typeof employee.token);
+    console.log('===================');
+    
+    if (employee.token != null && employee.token.length > 0) {
+      localStorage.setItem('token', employee.token);
+      console.log('Token saved to localStorage');
+    } else {
+      console.error('Token is null or empty!');
+    }
+    
+    localStorage.setItem('currentUser', JSON.stringify(employee));
+    console.log('User data saved to localStorage');
   }
 
   getToken(): string | null {
@@ -102,7 +113,16 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!(this.getToken());
+    const token = this.getToken();
+    const currentUser = this.getCurrentUser();
+    
+    console.log('isLoggedIn check:', {
+      hasToken: !!token,
+      hasCurrentUser: !!currentUser,
+      tokenLength: token ? token.length : 0
+    });
+    
+    return !!(token && currentUser && token.length > 0);
   }
 
   updateCurrentUserProfilePicture(pic: string) {

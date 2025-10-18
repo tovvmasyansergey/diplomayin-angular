@@ -24,10 +24,17 @@
           <a class="nav-link" (click)="navigateToContact()">Contact</a>
           <a class="nav-link" (click)="navigateToAbout()">About Us</a>
           <a class="nav-link" (click)="navigateToAllUsers()">All Users</a>
+          <a class="nav-link" routerLink="/chat">Chat</a>
         </div>
         <div class="nav-auth">
-          <a class="nav-link auth-link" (click)="navigateToLogin()">Sign In</a>
-          <a class="nav-link auth-link signup" (click)="navigateToRegister()">Sign Up</a>
+          <ng-container *ngIf="!isLoggedIn; else userMenu">
+            <a class="nav-link auth-link" (click)="navigateToLogin()">Sign In</a>
+            <a class="nav-link auth-link signup" (click)="navigateToRegister()">Sign Up</a>
+          </ng-container>
+          <ng-template #userMenu>
+            <span class="nav-link user-info">Привет, {{ currentUser?.firstname }}!</span>
+            <a class="nav-link auth-link" (click)="logout()">Выйти</a>
+          </ng-template>
         </div>
       </nav>
   <div class="welcome-header">
@@ -72,5 +79,15 @@
       <span class="button-text">Перейти к приложению</span>
       <span class="button-icon">→</span>
     </button>
+
+    <!-- Отладочная информация -->
+    <div class="debug-info" *ngIf="!isLoggedIn">
+      <h4>Отладочная информация:</h4>
+      <p>Статус авторизации: {{ isLoggedIn ? 'Авторизован' : 'Не авторизован' }}</p>
+      <p>Токен: {{ authService.getToken() ? 'Есть' : 'Нет' }}</p>
+      <p>Пользователь: {{ currentUser ? 'Есть' : 'Нет' }}</p>
+      <button class="btn btn-secondary" (click)="checkAuthStatus()">Проверить статус</button>
+      <button class="btn btn-danger" (click)="clearAuthData()">Очистить данные</button>
+    </div>
   </div>
 </div>

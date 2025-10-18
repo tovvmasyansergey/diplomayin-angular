@@ -69,6 +69,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.webSocketService.getMessages().subscribe(messages => {
         this.messages = messages;
         this.saveMessages();
+        this.scroll
+        ToBottom();
       })
     );
 
