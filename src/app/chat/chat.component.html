@@ -1,0 +1,66 @@
+<div class="user-form" id="username-page" *ngIf="!nickname">
+  <form id="usernameForm">
+    <input type="hidden" id="nickname" [value]="currentUser?.email" name="nickname" required>
+    <input type="hidden" id="selectedUser" [value]="selectedUser" name="nickname" required>
+  </form>
+</div>
+
+<div class="chat-container" id="chat-page" *ngIf="nickname">
+  <div class="users-list">
+    <div class="users-list-container">
+      <h2>💬 Chats</h2>
+      <ul id="connectedUsers">
+        <li 
+          *ngFor="let user of allUsers; let i = index" 
+          class="user-item"
+          [id]="user.id"
+          (click)="userItemClick(user)">
+          <div class="user-avatar">{{ user.firstName?.charAt(0) || 'U' }}</div>
+          <span>{{ user.firstName }} {{ user.lastName }}</span>
+          <span class="nbr-msg hidden">0</span>
+        </li>
+      </ul>
+    </div>
+    <div>
+      <p id="connected-user-fullname">{{ nickname }}</p>
+      <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+        <span class="status-dot"></span>
+        {{ isConnected ? 'Connected' : 'Disconnected' }}
+      </div>
+      <a class="logout" routerLink="/welcome" id="logout">← Back</a>
+    </div>
+  </div>
+
+  <div class="chat-area">
+    <div id="chat-messages">
+      <div 
+        *ngFor="let message of messages; let i = index" 
+        class="message"
+        [class.sender]="isMessageFromCurrentUser(message)"
+        [class.receiver]="!isMessageFromCurrentUser(message)"
+        [title]="'Message ' + i + ': senderId=' + message.senderId + ', currentUserId=' + currentUser.id + ', isFromCurrent=' + isMessageFromCurrentUser(message)">
+        <p>{{ message.content }}</p>
+      </div>
+    </div>
+
+    <form id="messageForm" name="messageForm" [class.hidden]="!selectedUserId" (ngSubmit)="sendMessage($event)">
+      <div class="message-input">
+        <input 
+          autocomplete="off" 
+          type="text" 
+          id="message" 
+          placeholder="💬 Type your message..."
+          [(ngModel)]="newMessage"
+          name="message"
+          required
+          minlength="1"
+          maxlength="1000">
+        <button 
+          type="submit"
+          [disabled]="!newMessage.trim() || !selectedUserId">
+          ✈️ Send
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
