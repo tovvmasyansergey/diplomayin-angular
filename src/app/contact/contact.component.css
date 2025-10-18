@@ -179,6 +179,7 @@
   padding: 1rem 2rem;
   background: transparent;
   z-index: 1000;
+  flex-wrap: wrap;
 }
 
 .nav-links {
@@ -604,35 +605,35 @@
   .contact-content {
     padding: 6rem 1rem 2rem;
   }
-  
+
   .page-title {
     font-size: 2rem;
   }
-  
+
   .contact-info-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .additional-info {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .cta-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .cta-btn {
     width: 100%;
     max-width: 300px;
   }
-  
+
   .nav-links {
     gap: 1rem;
   }
-  
+
   .nav-link {
     font-size: 1rem;
     padding: 0.6rem 0.8rem;
@@ -642,5 +643,20 @@
 @media (max-width: 1250px) {
   .contact-content {
     width: 85%;
+  }
+}
+
+@media (min-width: 320px) and (max-width: 480px) {
+  .nav-links {
+    flex-direction: column;
+  }
+
+  .top-navigation {
+    display: grid;
+    flex-wrap: wrap;
+  }
+
+  .contact-card {
+    padding: 0;
   }
 }

@@ -27,6 +27,6 @@ html, body {
   border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #5a6fd8 0%, #6a4190 100%);
-}
+/*::-webkit-scrollbar-thumb:hover {*/
+/*  background: linear-gradient(180deg, #5a6fd8 0%, #6a4190 100%);*/
+/*}*/

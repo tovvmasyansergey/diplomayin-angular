@@ -11,6 +11,7 @@
   position: relative;
   top: 0;
   left: 0;
+  flex-wrap: wrap;
 }
 
 /* Навигационное меню */
@@ -25,11 +26,11 @@
   padding: 1rem 2rem;
   background: transparent;
   z-index: 10;
+  flex-wrap: wrap;
 }
 
 .nav-links {
   display: flex;
-  gap: 2rem;
   align-items: center;
 }
 

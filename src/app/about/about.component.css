@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  overflow: visible;
+  overflow: clip;
   position: relative;
   top: 0;
   left: 0;
@@ -179,6 +179,7 @@
   padding: 1rem 2rem;
   background: transparent;
   z-index: 1000;
+  flex-wrap: wrap;
 }
 
 .nav-links {
@@ -751,55 +752,55 @@
   .about-content {
     padding: 6rem 1rem 2rem;
   }
-  
+
   .page-title {
     font-size: 2rem;
   }
-  
+
   .story-content {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-  
+
   .mission-values {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .team-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .achievements-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
-  
+
   .social-links {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .social-btn {
     width: 100%;
     max-width: 250px;
   }
-  
+
   .cta-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .cta-btn {
     width: 100%;
     max-width: 300px;
   }
-  
+
   .nav-links {
     gap: 1rem;
   }
-  
+
   .nav-link {
     font-size: 1rem;
     padding: 0.6rem 0.8rem;
@@ -809,5 +810,19 @@
 @media (max-width: 1250px) {
   .about-content {
     width: 85%;
+  }
+}
+@media (min-width: 320px) and (max-width: 480px) {
+  .top-navigation{
+    flex-wrap: wrap;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .nav-links {
+    flex-direction: column;
+  }
+  .achievements-grid{
+    grid-template-columns: auto;
   }
 }
