@@ -1,0 +1,62 @@
+<div class="application-container">
+  <div class="application-header">
+    <h1 class="application-title">Application Dashboard</h1>
+    <p class="application-subtitle">Welcome to your workspace!</p>
+  </div>
+
+  <div class="application-content">
+    <div class="dashboard-grid">
+      <div class="dashboard-card">
+        <div class="card-icon">
+          <span class="icon">💬</span>
+        </div>
+        <h3 class="card-title">Chat</h3>
+        <p class="card-description">Start conversations with other users</p>
+        <button class="card-button" (click)="navigateToChat()">
+          <span class="button-text">Open Chat</span>
+          <span class="button-icon">→</span>
+        </button>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="card-icon">
+          <span class="icon">👥</span>
+        </div>
+        <h3 class="card-title">All Users</h3>
+        <p class="card-description">View and manage all users</p>
+        <button class="card-button" (click)="navigateToAllUsers()">
+          <span class="button-text">View Users</span>
+          <span class="button-icon">→</span>
+        </button>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="card-icon">
+          <span class="icon">📚</span>
+        </div>
+        <h3 class="card-title">Education</h3>
+        <p class="card-description">Learn more about our platform</p>
+        <button class="card-button" (click)="navigateToEducation()">
+          <span class="button-text">Learn More</span>
+          <span class="button-icon">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="user-info-section">
+      <div class="user-card">
+        <div class="user-avatar">
+          <span class="avatar-text">{{ getCurrentUserInitials() }}</span>
+        </div>
+        <div class="user-details">
+          <h3 class="user-name">{{ getCurrentUserName() }}</h3>
+          <p class="user-email">{{ getCurrentUserEmail() }}</p>
+        </div>
+        <button class="logout-button" (click)="logout()">
+          <span class="logout-text">Logout</span>
+          <span class="logout-icon">🚪</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -6,40 +6,75 @@
 </div>
 
 <div class="chat-container" id="chat-page" *ngIf="nickname">
-  <div class="users-list">
-    <div class="users-list-container">
+  <!-- Левая панель с пользователями -->
+  <div class="users-panel" [class.hidden-mobile]="showChatOnMobile">
+    <div class="users-header">
       <h2>💬 Chats</h2>
+      <div class="user-info">
+        <p id="connected-user-fullname">{{ nickname }}</p>
+        <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+          <span class="status-dot"></span>
+          {{ isConnected ? 'Connected' : 'Disconnected' }}
+        </div>
+      </div>
+    </div>
+    
+    <div class="users-list-container">
       <ul id="connectedUsers">
         <li 
           *ngFor="let user of allUsers; let i = index" 
           class="user-item"
           [id]="user.id"
           (click)="userItemClick(user)">
-          <div class="user-avatar">{{ user.firstName?.charAt(0) || 'U' }}</div>
-          <span>{{ user.firstName }} {{ user.lastName }}</span>
+          <div class="user-avatar">
+            <img *ngIf="user.profilePicture" [src]="getImageUrl(user.profilePicture)" [alt]="user.firstName + ' ' + user.lastName" class="user-photo" (error)="onImageError($event)">
+            <span *ngIf="!user.profilePicture">{{ user.firstName?.charAt(0) || 'U' }}</span>
+          </div>
+          <div class="user-info">
+            <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+            <span class="last-message" *ngIf="getLastMessage(user.id)">{{ getLastMessage(user.id)?.content }}</span>
+          </div>
           <span class="nbr-msg hidden">0</span>
         </li>
       </ul>
     </div>
-    <div>
-      <p id="connected-user-fullname">{{ nickname }}</p>
-      <div class="connection-status" [class.connected]="isConnected" [class.disconnected]="!isConnected">
-        <span class="status-dot"></span>
-        {{ isConnected ? 'Connected' : 'Disconnected' }}
-      </div>
+    
+    <div class="users-footer">
       <a class="logout" routerLink="/welcome" id="logout">← Back</a>
     </div>
   </div>
 
-  <div class="chat-area">
-    <div id="chat-messages">
-      <div 
-        *ngFor="let message of messages; let i = index" 
-        class="message"
-        [class.sender]="isMessageFromCurrentUser(message)"
-        [class.receiver]="!isMessageFromCurrentUser(message)"
-        [title]="'Message ' + i + ': senderId=' + message.senderId + ', currentUserId=' + currentUser.id + ', isFromCurrent=' + isMessageFromCurrentUser(message)">
-        <p>{{ message.content }}</p>
+  <!-- Правая панель с чатом -->
+  <div class="chat-panel" [class.full-width-mobile]="showChatOnMobile">
+    <div class="chat-header" *ngIf="selectedUserId">
+      <div class="selected-user-info">
+        <button class="back-button-mobile" *ngIf="showChatOnMobile" (click)="showUsersList()" title="Back to users list">
+          ← Back
+        </button>
+        <div class="user-avatar">
+          <img *ngIf="getSelectedUser()?.profilePicture" [src]="getImageUrl(getSelectedUser()?.profilePicture)" [alt]="getSelectedUser()?.firstName + ' ' + getSelectedUser()?.lastName" class="user-photo" (error)="onImageError($event)">
+          <span *ngIf="!getSelectedUser()?.profilePicture">{{ getSelectedUser()?.firstName?.charAt(0) || 'U' }}</span>
+        </div>
+        <span>{{ getSelectedUser()?.firstName }} {{ getSelectedUser()?.lastName }}</span>
+      </div>
+    </div>
+    
+    <div class="chat-messages-container">
+      <div id="chat-messages" (scroll)="onScroll($event)">
+        <div 
+          *ngFor="let message of messages; let i = index" 
+          class="message"
+          [class.sender]="isMessageFromCurrentUser(message)"
+          [class.receiver]="!isMessageFromCurrentUser(message)"
+          [title]="'Message ' + i + ': senderId=' + message.senderId + ', currentUserId=' + currentUser.id + ', isFromCurrent=' + isMessageFromCurrentUser(message)">
+          <p [innerHTML]="formatMessageContent(message.content)"></p>
+        </div>
+
+        <!-- Индикатор загрузки -->
+        <div class="loading-indicator" *ngIf="isLoadingMessages">
+          <div class="spinner"></div>
+          <span>Loading messages...</span>
+        </div>
       </div>
     </div>
 

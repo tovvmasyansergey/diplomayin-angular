@@ -98,6 +98,15 @@ export class WebSocketService {
 
   private addMessage(message: ChatMessage): void {
     const currentMessages = this.messages.value;
-    this.messages.next([...currentMessages, message]);
+    const updatedMessages = [...currentMessages, message];
+    
+    // Сортируем сообщения по времени (старые сверху, новые снизу)
+    const sortedMessages = updatedMessages.sort((a, b) => {
+      const dateA = new Date(a.timestamp).getTime();
+      const dateB = new Date(b.timestamp).getTime();
+      return dateA - dateB;
+    });
+    
+    this.messages.next(sortedMessages);
   }
 }

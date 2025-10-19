@@ -5,9 +5,11 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ChatMessage } from '../models/chat-message.model';
 import { WebSocketService } from '../service/websocket.service';
-import { ChatService } from '../service/chat.service';
+import { ChatService, PaginatedResponse } from '../service/chat.service';
 import { UserService } from '../service/user.service';
 import { AuthService } from '../service/auth.service';
+
+const BACKEND_BASE_URL = 'http://localhost:7404';
 
 @Component({
   selector: 'app-chat',
@@ -27,6 +29,23 @@ export class ChatComponent implements OnInit, OnDestroy {
   subscriptions: Subscription[] = [];
   nickname: string = '';
   selectedUser: string = '';
+  
+  // Новые свойства для пагинации
+  isLoadingMessages: boolean = false;
+  hasMoreMessages: boolean = true;
+  currentPage: number = 0;
+  pageSize: number = 15;
+  totalMessages: number = 0;
+  
+  // Кэш последних сообщений для каждого пользователя
+  lastMessagesCache: Map<string, ChatMessage> = new Map();
+  
+  // Мобильная адаптивность
+  showChatOnMobile: boolean = false;
+  isMobile: boolean = false;
+  
+  // Автоматическая загрузка при скролле
+  private scrollThreshold: number = 100; // пикселей от верха для загрузки
 
   constructor(
     private router: Router,
@@ -50,6 +69,18 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.nickname = this.currentUser.email;
     console.log('👤 Current user:', this.currentUser);
 
+    // Определяем мобильное устройство
+    this.isMobile = window.innerWidth <= 768;
+    this.showChatOnMobile = false;
+
+    // Добавляем обработчик изменения размера окна
+    window.addEventListener('resize', () => {
+      this.isMobile = window.innerWidth <= 768;
+      if (!this.isMobile) {
+        this.showChatOnMobile = false;
+      }
+    });
+
     // Подключаемся к WebSocket с ID пользователя
     this.webSocketService.connect(this.currentUser.id);
 
@@ -67,8 +98,25 @@ export class ChatComponent implements OnInit, OnDestroy {
     // Подписка на сообщения
     this.subscriptions.push(
       this.webSocketService.getMessages().subscribe(messages => {
-        this.messages = messages;
-        this.saveMessages();
+        console.log('📨 WebSocket messages received:', messages.length);
+        
+        // Проверяем, что это сообщения для текущего выбранного пользователя
+        if (this.selectedUserId && messages.length > 0) {
+          // Фильтруем сообщения только для текущего диалога
+          const currentDialogMessages = messages.filter(msg => 
+            (msg.senderId.toString() === this.currentUser.id.toString() && msg.recipientId.toString() === this.selectedUserId) ||
+            (msg.senderId.toString() === this.selectedUserId && msg.recipientId.toString() === this.currentUser.id.toString())
+          );
+          
+          if (currentDialogMessages.length > 0) {
+            console.log('📨 Filtered messages for current dialog:', currentDialogMessages.length);
+            this.messages = currentDialogMessages;
+            this.saveMessages();
+            
+            // Прокручиваем к последнему сообщению
+            this.scrollToBottom();
+          }
+        }
       })
     );
 
@@ -78,6 +126,14 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.webSocketService.disconnect();
+    
+    // Удаляем обработчик изменения размера окна
+    window.removeEventListener('resize', () => {
+      this.isMobile = window.innerWidth <= 768;
+      if (!this.isMobile) {
+        this.showChatOnMobile = false;
+      }
+    });
   }
 
   async findAndDisplayConnectedUsers(): Promise<void> {
@@ -146,6 +202,11 @@ export class ChatComponent implements OnInit, OnDestroy {
       clickedElement.classList.add('active');
     }
 
+    // На мобильных устройствах показываем чат
+    if (this.isMobile) {
+      this.showChatOnMobile = true;
+    }
+
     // Загружаем историю чата
     this.fetchAndDisplayUserChat();
   }
@@ -167,8 +228,15 @@ export class ChatComponent implements OnInit, OnDestroy {
       isFromCurrentUser: this.isMessageFromCurrentUser(message)
     });
 
-    const currentMessages = this.messages;
-    this.messages = [...currentMessages, message];
+    // Добавляем новое сообщение в конец списка
+    this.messages = [...this.messages, message];
+    
+    // Сортируем все сообщения по времени для корректного отображения
+    this.messages = this.messages.sort((a, b) => {
+      const dateA = new Date(a.timestamp).getTime();
+      const dateB = new Date(b.timestamp).getTime();
+      return dateA - dateB;
+    });
 
     console.log('📤 Total messages after adding:', this.messages.length);
   }
@@ -182,54 +250,61 @@ export class ChatComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Сбрасываем пагинацию при выборе нового пользователя
+    this.currentPage = 0;
+    this.hasMoreMessages = true;
+    this.isLoadingMessages = true;
+
+    // Сначала пытаемся загрузить сохраненные сообщения
+    this.loadSavedMessages();
+
     try {
       console.log('📋 Loading chat history between:', this.currentUser.id, 'and', this.selectedUserId);
-      this.chatService.findChatMessages(this.currentUser.id.toString(), this.selectedUserId).subscribe({
-        next: (userChat) => {
-          console.log('📋 Loaded chat history:', userChat);
+      this.chatService.findChatMessagesWithPagination(this.currentUser.id.toString(), this.selectedUserId, this.currentPage, this.pageSize).subscribe({
+        next: (response: PaginatedResponse<ChatMessage>) => {
+          console.log('📋 Loaded chat history:', response);
           console.log('📋 Current user ID:', this.currentUser.id);
           console.log('📋 Current user email:', this.currentUser.email);
           console.log('📋 Selected user ID:', this.selectedUserId);
-          console.log('📋 Total messages loaded:', userChat.length);
+          console.log('📋 Total messages loaded:', response.content.length);
+          console.log('📋 Total pages:', response.totalPages);
+          console.log('📋 Current page:', response.number);
 
-          // Логируем каждое сообщение для диагностики
-          userChat.forEach((message, index) => {
-            const isFromCurrentUser = this.isMessageFromCurrentUser(message);
-            console.log(`📋 Message ${index}:`, {
-              senderId: message.senderId,
-              recipientId: message.recipientId,
-              content: message.content,
-              isFromCurrentUser: isFromCurrentUser,
-              shouldBeOnRight: isFromCurrentUser,
-              shouldBeOnLeft: !isFromCurrentUser,
-              currentUserId: this.currentUser.id,
-              currentUserEmail: this.currentUser.email
-            });
+          // Обновляем кэш последних сообщений
+          this.updateLastMessagesCache(response.content);
+
+          // Сохраняем информацию о пагинации
+          this.hasMoreMessages = !response.last;
+          this.totalMessages = response.totalElements;
+
+          // Сортируем сообщения по времени (старые сверху, новые снизу)
+          const sortedMessages = response.content.sort((a, b) => {
+            const dateA = new Date(a.timestamp).getTime();
+            const dateB = new Date(b.timestamp).getTime();
+            return dateA - dateB;
           });
 
-          this.messages = userChat;
-          this.webSocketService.setMessages(userChat);
+          this.messages = sortedMessages;
+          this.webSocketService.setMessages(sortedMessages);
+          this.isLoadingMessages = false;
 
           console.log('📋 Messages assigned to this.messages:', this.messages.length);
           console.log('📋 First few messages in this.messages:', this.messages.slice(0, 3));
 
-          // Прокручиваем вниз
-          setTimeout(() => {
-            const chatMessages = document.getElementById('chat-messages');
-            if (chatMessages) {
-              chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-          }, 100);
+          // Прокручиваем вниз к последнему сообщению
+          this.scrollToBottom();
         },
         error: (error) => {
           console.error('❌ Error loading chat history:', error);
           // Если API не работает, создаем пустую историю
           this.messages = [];
           this.webSocketService.setMessages([]);
+          this.isLoadingMessages = false;
         }
       });
     } catch (error) {
       console.error('❌ Error loading chat history:', error);
+      this.isLoadingMessages = false;
     }
   }
 
@@ -267,15 +342,14 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     console.log('📤 Sending message:', chatMessage);
     this.webSocketService.sendMessage(chatMessage);
+    
+    // Добавляем сообщение локально для мгновенного отображения
     this.displayMessage(this.currentUser.id.toString(), messageContent);
     this.newMessage = '';
 
-    // Прокручиваем вниз
+    // Прокручиваем вниз к новому сообщению
     setTimeout(() => {
-      const chatMessages = document.getElementById('chat-messages');
-      if (chatMessages) {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
+      this.scrollToBottom();
     }, 100);
   }
 
@@ -287,14 +361,26 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private loadSavedMessages(): void {
-    if (this.selectedUserId) {
+    if (this.selectedUserId && this.currentUser) {
       const key = `chat_${this.currentUser.id}_${this.selectedUserId}`;
       const saved = localStorage.getItem(key);
       if (saved) {
         try {
-          this.messages = JSON.parse(saved);
-          this.webSocketService.setMessages(this.messages);
-          console.log('💾 Loaded saved messages:', this.messages);
+          const savedMessages = JSON.parse(saved);
+          
+          // Сортируем сохраненные сообщения по времени
+          const sortedMessages = savedMessages.sort((a: ChatMessage, b: ChatMessage) => {
+            const dateA = new Date(a.timestamp).getTime();
+            const dateB = new Date(b.timestamp).getTime();
+            return dateA - dateB;
+          });
+          
+          this.messages = sortedMessages;
+          this.webSocketService.setMessages(sortedMessages);
+          console.log('💾 Loaded saved messages:', sortedMessages.length);
+          
+          // Прокручиваем к последнему сообщению
+          this.scrollToBottom();
         } catch (error) {
           console.error('❌ Error loading saved messages:', error);
         }
@@ -347,17 +433,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Прокрутить чат вниз
-   */
-  scrollToBottom(): void {
-    setTimeout(() => {
-      const chatMessages = document.getElementById('chat-messages');
-      if (chatMessages) {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-    }, 100);
-  }
 
   /**
    * Навигация
@@ -373,5 +448,209 @@ export class ChatComponent implements OnInit, OnDestroy {
   // Свойства для шаблона
   get messageForm(): HTMLElement {
     return document.querySelector('#messageForm') as HTMLElement;
+  }
+
+  /**
+   * Получить выбранного пользователя
+   */
+  getSelectedUser(): any {
+    return this.allUsers.find(user => user.id.toString() === this.selectedUserId);
+  }
+
+  /**
+   * Получить последнее сообщение для пользователя
+   */
+  getLastMessage(userId: string | number): ChatMessage | null {
+    return this.lastMessagesCache.get(userId.toString()) || null;
+  }
+
+  /**
+   * Обновить кэш последних сообщений
+   */
+  private updateLastMessagesCache(messages: ChatMessage[]): void {
+    if (!this.selectedUserId || !this.currentUser) return;
+
+    // Находим самое последнее сообщение по времени
+    const sortedMessages = messages.sort((a, b) => {
+      const dateA = new Date(a.timestamp).getTime();
+      const dateB = new Date(b.timestamp).getTime();
+      return dateB - dateA; // DESC - самое новое первым
+    });
+
+    const lastMessage = sortedMessages[0];
+    if (lastMessage) {
+      // Сохраняем последнее сообщение для текущего диалога
+      const cacheKey = `${this.currentUser.id}_${this.selectedUserId}`;
+      this.lastMessagesCache.set(cacheKey, lastMessage);
+    }
+  }
+
+  /**
+   * Загрузить больше сообщений (пагинация)
+   */
+  loadMoreMessages(): void {
+    if (this.isLoadingMessages || !this.hasMoreMessages || !this.selectedUserId) {
+      return;
+    }
+
+    this.isLoadingMessages = true;
+    this.currentPage++;
+
+    console.log('📄 Loading more messages, page:', this.currentPage);
+
+    this.chatService.findChatMessagesWithPagination(this.currentUser.id.toString(), this.selectedUserId, this.currentPage, this.pageSize).subscribe({
+      next: (response: PaginatedResponse<ChatMessage>) => {
+        console.log('📄 Loaded more messages:', response.content.length);
+        
+        // Сортируем новые сообщения по времени (старые сверху, новые снизу)
+        const sortedNewMessages = response.content.sort((a, b) => {
+          const dateA = new Date(a.timestamp).getTime();
+          const dateB = new Date(b.timestamp).getTime();
+          return dateA - dateB;
+        });
+        
+        // Добавляем новые сообщения в начало списка
+        this.messages = [...sortedNewMessages, ...this.messages];
+        
+        // Обновляем информацию о пагинации
+        this.hasMoreMessages = !response.last;
+        this.totalMessages = response.totalElements;
+        
+        this.isLoadingMessages = false;
+        
+        // Сохраняем позицию скролла
+        this.maintainScrollPosition();
+      },
+      error: (error) => {
+        console.error('❌ Error loading more messages:', error);
+        this.isLoadingMessages = false;
+        this.currentPage--; // Откатываем номер страницы при ошибке
+      }
+    });
+  }
+
+  /**
+   * Сохранить позицию скролла при загрузке предыдущих сообщений
+   */
+  private maintainScrollPosition(): void {
+    setTimeout(() => {
+      const chatMessages = document.getElementById('chat-messages');
+      if (chatMessages) {
+        // Сохраняем текущую позицию скролла
+        const currentScrollTop = chatMessages.scrollTop;
+        const currentScrollHeight = chatMessages.scrollHeight;
+        
+        // После добавления новых сообщений восстанавливаем позицию
+        chatMessages.scrollTop = currentScrollTop + (chatMessages.scrollHeight - currentScrollHeight);
+      }
+    }, 100);
+  }
+
+  /**
+   * Улучшенный метод прокрутки к низу
+   */
+  scrollToBottom(): void {
+    setTimeout(() => {
+      const chatMessages = document.getElementById('chat-messages');
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        console.log('📜 Scrolled to bottom, scrollTop:', chatMessages.scrollTop, 'scrollHeight:', chatMessages.scrollHeight);
+      }
+    }, 200); // Увеличиваем задержку для более надежной работы
+  }
+
+  /**
+   * Обработка скролла для автоматической загрузки сообщений
+   */
+  onScroll(event: Event): void {
+    const element = event.target as HTMLElement;
+    
+    // Проверяем, если пользователь прокрутил близко к верху
+    if (element.scrollTop <= this.scrollThreshold && this.hasMoreMessages && !this.isLoadingMessages) {
+      console.log('📄 Auto-loading more messages on scroll');
+      this.loadMoreMessages();
+    }
+  }
+
+  /**
+   * Форматировать содержимое сообщения для правильного отображения
+   */
+  formatMessageContent(content: string): string {
+    if (!content) return '';
+    
+    // Экранируем HTML теги для безопасности
+    const escapedContent = content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    
+    // Заменяем переносы строк на <br>
+    return escapedContent.replace(/\n/g, '<br>');
+  }
+
+  /**
+   * Получить полный URL для изображения
+   */
+  getImageUrl(imagePath: string | undefined): string {
+    if (!imagePath) return '';
+    
+    // Если это уже полный URL, возвращаем как есть
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Убираем ведущий слеш, если он есть
+    const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    
+    // Добавляем базовый URL бэкенда
+    return `${BACKEND_BASE_URL}/${cleanPath}`;
+  }
+
+  /**
+   * Обработка ошибки загрузки изображения
+   */
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    console.log('❌ Image load error for:', img.src);
+    
+    // Скрываем изображение
+    img.style.display = 'none';
+    
+    // Находим родительский элемент и показываем span с буквой
+    const avatar = img.parentElement;
+    if (avatar) {
+      const span = avatar.querySelector('span');
+      if (span) {
+        span.style.display = 'flex';
+        console.log('✅ Fallback to letter avatar');
+      }
+    }
+  }
+
+  /**
+   * Показать список пользователей (для мобильной версии)
+   */
+  showUsersList(): void {
+    console.log('🔙 Back button clicked, showChatOnMobile was:', this.showChatOnMobile);
+    this.showChatOnMobile = false;
+    console.log('🔙 showChatOnMobile set to:', this.showChatOnMobile);
+    
+    // Очищаем выбранного пользователя для полного сброса
+    this.selectedUserId = null;
+    this.selectedUserName = '';
+    this.messages = [];
+    
+    // Скрываем форму сообщений
+    const messageForm = document.querySelector('#messageForm') as HTMLElement;
+    if (messageForm) {
+      messageForm.classList.add('hidden');
+    }
+    
+    // Убираем активный класс со всех элементов пользователей
+    document.querySelectorAll('.user-item').forEach(item => {
+      item.classList.remove('active');
+    });
   }
 }
