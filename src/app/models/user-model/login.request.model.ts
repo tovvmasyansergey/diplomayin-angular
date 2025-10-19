@@ -1,11 +1,10 @@
 export class LoginRequestModel {
   id?: number;
-  email: string | undefined;
-  password: string | undefined;
   firstname?: string;
   lastname?: string;
+  email: string | undefined;
+  role?: string;
+  token?: string;
   phone?: string;
   profilePicture?: string;
-  location?: string;
-  token?: string;
 }

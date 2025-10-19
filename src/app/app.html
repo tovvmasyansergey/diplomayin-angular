@@ -5,7 +5,7 @@
 <style>
 .app-container {
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background: linear-gradient(135deg, var(--mat-sys-primary) 0%, var(--mat-sys-secondary) 50%, var(--mat-sys-tertiary) 100%);
   margin: 0;
   padding: 0;
   position: relative;
@@ -20,9 +20,9 @@
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(0, 127, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(3, 169, 244, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(0, 188, 212, 0.2) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -30,7 +30,7 @@
 app-chat {
   display: block;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--mat-sys-primary) 0%, var(--mat-sys-secondary) 100%);
 }
 
 app-chat .chat-container {
@@ -41,7 +41,7 @@ app-chat .chat-container {
   max-height: 700px;
   margin: 20px auto;
   border: none;
-  background-color: #fff;
+  background-color: var(--mat-sys-primary-container);
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   border-radius: 20px;

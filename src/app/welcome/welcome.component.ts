@@ -50,6 +50,11 @@ export class WelcomeComponent {
   }
 
   navigateToApp() {
+    if (this.isLoggedIn) {
+      this.router.navigate(['/application']);
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   navigateToHome(event?: Event) {

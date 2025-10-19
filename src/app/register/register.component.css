@@ -325,7 +325,7 @@
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--mat-sys-primary-container);
   box-sizing: border-box;
 }
 
@@ -546,7 +546,7 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--mat-sys-primary-container);
   min-height: 120px;
   display: flex;
   align-items: center;

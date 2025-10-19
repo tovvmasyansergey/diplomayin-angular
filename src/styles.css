@@ -1,5 +1,51 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Material Design 3 Color System */
+:root {
+  /* Primary Colors */
+  --mat-sys-primary: #007FFF;
+  --mat-sys-on-primary: #FFFFFF;
+  --mat-sys-primary-container: #E3F2FD;
+  --mat-sys-on-primary-container: #001D32;
+  
+  /* Secondary Colors */
+  --mat-sys-secondary: #03A9F4;
+  --mat-sys-on-secondary: #FFFFFF;
+  --mat-sys-secondary-container: #BBDEFB;
+  --mat-sys-on-secondary-container: #001D32;
+  
+  /* Tertiary Colors */
+  --mat-sys-tertiary: #00BCD4;
+  --mat-sys-on-tertiary: #FFFFFF;
+  --mat-sys-tertiary-container: #90CAF9;
+  --mat-sys-on-tertiary-container: #001D32;
+  
+  /* Surface Colors */
+  --mat-sys-surface: #FEFBFF;
+  --mat-sys-on-surface: #1C1B1F;
+  --mat-sys-surface-container: #F3F0F4;
+  --mat-sys-surface-container-high: #EDEAF2;
+  --mat-sys-surface-container-highest: #E7E0EC;
+  
+  /* Background Colors */
+  --mat-sys-background: #FEFBFF;
+  --mat-sys-on-background: #1C1B1F;
+  
+  /* Error Colors */
+  --mat-sys-error: #BA1A1A;
+  --mat-sys-on-error: #FFFFFF;
+  --mat-sys-error-container: #FFDAD6;
+  --mat-sys-on-error-container: #410002;
+  
+  /* Outline Colors */
+  --mat-sys-outline: #79747E;
+  --mat-sys-outline-variant: #CAC4D0;
+  
+  /* Shadow */
+  --mat-sys-shadow: #000000;
+  --mat-sys-scrim: #000000;
+}
+
 /* Глобальные стили для чата */
 html, body {
   height: 100%;

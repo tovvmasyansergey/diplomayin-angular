@@ -590,7 +590,7 @@
 }
 
 .chat-modal {
-  background: white;
+  background: var(--mat-sys-primary-container);
   border-radius: 20px;
   padding: 2rem;
   max-width: 400px;
@@ -820,7 +820,7 @@
 }
 
 .edit-modal {
-  background: white;
+  background: var(--mat-sys-primary-container);
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
@@ -932,7 +932,7 @@
 }
 
 .delete-modal {
-  background: white;
+  background: var(--mat-sys-primary-container);
   border-radius: 16px;
   width: 90%;
   max-width: 400px;

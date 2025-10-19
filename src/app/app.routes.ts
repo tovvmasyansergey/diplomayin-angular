@@ -5,10 +5,12 @@ import {ContactComponent} from './contact/contact.component';
 import {AboutComponent} from './about/about.component';
 import {AllUsersComponent} from './all-users/all-users.component';
 import {ChatComponent} from './chat/chat.component';
+import {ApplicationComponent} from './application/application';
 import {AuthGuard} from './guards/auth.guard';
 
 export const routes: Routes = [
   {path: '', component: WelcomeComponent},
+  {path: 'application', component: ApplicationComponent, canActivate: [AuthGuard]},
   {path: 'education', component: EducationComponent},
   {path: 'contact', component: ContactComponent},
   {path: 'about', component: AboutComponent},
