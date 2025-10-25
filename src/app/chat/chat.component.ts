@@ -99,17 +99,23 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.webSocketService.getMessages().subscribe(messages => {
         console.log('📨 WebSocket messages received:', messages.length);
+        console.log('📨 Current selected user ID:', this.selectedUserId);
+        console.log('📨 Current user ID:', this.currentUser?.id);
         
         // Проверяем, что это сообщения для текущего выбранного пользователя
         if (this.selectedUserId && messages.length > 0) {
           // Фильтруем сообщения только для текущего диалога
-          const currentDialogMessages = messages.filter(msg => 
-            (msg.senderId.toString() === this.currentUser.id.toString() && msg.recipientId.toString() === this.selectedUserId) ||
-            (msg.senderId.toString() === this.selectedUserId && msg.recipientId.toString() === this.currentUser.id.toString())
-          );
+          const currentDialogMessages = messages.filter(msg => {
+            const senderMatch = msg.senderId.toString() === this.currentUser.id.toString() && msg.recipientId.toString() === this.selectedUserId;
+            const recipientMatch = msg.senderId.toString() === this.selectedUserId && msg.recipientId.toString() === this.currentUser.id.toString();
+            return senderMatch || recipientMatch;
+          });
+          
+          console.log('📨 Filtered messages for current dialog:', currentDialogMessages.length);
+          console.log('📨 All messages:', messages);
+          console.log('📨 Filtered messages:', currentDialogMessages);
           
           if (currentDialogMessages.length > 0) {
-            console.log('📨 Filtered messages for current dialog:', currentDialogMessages.length);
             this.messages = currentDialogMessages;
             this.saveMessages();
             
@@ -211,11 +217,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.fetchAndDisplayUserChat();
   }
 
-  displayMessage(senderId: string, content: string): void {
+  displayMessage(senderId: number, content: string): void {
     const message: ChatMessage = {
       content: content,
       senderId: senderId,
-      recipientId: this.selectedUserId || '',
+      recipientId: parseInt(this.selectedUserId || '0'),
       timestamp: new Date(),
       messageType: 'TEXT'
     };
@@ -231,11 +237,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     // Добавляем новое сообщение в конец списка
     this.messages = [...this.messages, message];
     
-    // Сортируем все сообщения по времени для корректного отображения
+    // Сортируем все сообщения по времени для корректного отображения (старые сверху, новые снизу)
     this.messages = this.messages.sort((a, b) => {
       const dateA = new Date(a.timestamp).getTime();
       const dateB = new Date(b.timestamp).getTime();
-      return dateA - dateB;
+      return dateA - dateB; // Старые сообщения сверху, новые снизу
     });
 
     console.log('📤 Total messages after adding:', this.messages.length);
@@ -281,7 +287,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           const sortedMessages = response.content.sort((a, b) => {
             const dateA = new Date(a.timestamp).getTime();
             const dateB = new Date(b.timestamp).getTime();
-            return dateA - dateB;
+            return dateA - dateB; // Старые сообщения сверху, новые снизу
           });
 
           this.messages = sortedMessages;
@@ -333,8 +339,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
 
     const chatMessage: ChatMessage = {
-      senderId: this.currentUser.id.toString(),
-      recipientId: this.selectedUserId,
+      senderId: this.currentUser.id,
+      recipientId: parseInt(this.selectedUserId),
       content: messageContent,
       timestamp: new Date(),
       messageType: 'TEXT'
@@ -344,7 +350,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.webSocketService.sendMessage(chatMessage);
     
     // Добавляем сообщение локально для мгновенного отображения
-    this.displayMessage(this.currentUser.id.toString(), messageContent);
+    this.displayMessage(this.currentUser.id, messageContent);
     this.newMessage = '';
 
     // Прокручиваем вниз к новому сообщению
@@ -368,11 +374,11 @@ export class ChatComponent implements OnInit, OnDestroy {
         try {
           const savedMessages = JSON.parse(saved);
           
-          // Сортируем сохраненные сообщения по времени
+          // Сортируем сохраненные сообщения по времени (старые сверху, новые снизу)
           const sortedMessages = savedMessages.sort((a: ChatMessage, b: ChatMessage) => {
             const dateA = new Date(a.timestamp).getTime();
             const dateB = new Date(b.timestamp).getTime();
-            return dateA - dateB;
+            return dateA - dateB; // Старые сообщения сверху, новые снизу
           });
           
           this.messages = sortedMessages;
@@ -398,9 +404,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    // Приводим оба значения к строкам для корректного сравнения
-    const messageSenderId = String(message.senderId);
-    const currentUserId = String(this.currentUser.id);
+    // Приводим оба значения к числам для корректного сравнения
+    const messageSenderId = Number(message.senderId);
+    const currentUserId = Number(this.currentUser.id);
     const isFromCurrentUser = messageSenderId === currentUserId;
 
     console.log('🔍 Message check:', {
@@ -474,7 +480,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     const sortedMessages = messages.sort((a, b) => {
       const dateA = new Date(a.timestamp).getTime();
       const dateB = new Date(b.timestamp).getTime();
-      return dateB - dateA; // DESC - самое новое первым
+      return dateB - dateA; // DESC - самое новое первым (для поиска последнего сообщения)
     });
 
     const lastMessage = sortedMessages[0];
@@ -506,7 +512,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         const sortedNewMessages = response.content.sort((a, b) => {
           const dateA = new Date(a.timestamp).getTime();
           const dateB = new Date(b.timestamp).getTime();
-          return dateA - dateB;
+          return dateA - dateB; // Старые сообщения сверху, новые снизу
         });
         
         // Добавляем новые сообщения в начало списка

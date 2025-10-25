@@ -43,8 +43,8 @@ export class WebSocketService {
             const chatMessage: ChatMessage = {
               id: notification.id,
               content: notification.content,
-              senderId: notification.senderId,
-              recipientId: notification.receiverId,
+              senderId: parseInt(notification.senderId.toString()),
+              recipientId: parseInt(notification.receiverId.toString()),
               timestamp: new Date(),
               messageType: 'TEXT'
             };
@@ -104,7 +104,7 @@ export class WebSocketService {
     const sortedMessages = updatedMessages.sort((a, b) => {
       const dateA = new Date(a.timestamp).getTime();
       const dateB = new Date(b.timestamp).getTime();
-      return dateA - dateB;
+      return dateA - dateB; // Старые сообщения сверху, новые снизу
     });
     
     this.messages.next(sortedMessages);
