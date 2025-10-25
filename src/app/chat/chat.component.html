@@ -18,11 +18,11 @@
         </div>
       </div>
     </div>
-    
+
     <div class="users-list-container">
       <ul id="connectedUsers">
-        <li 
-          *ngFor="let user of allUsers; let i = index" 
+        <li
+          *ngFor="let user of allUsers; let i = index"
           class="user-item"
           [id]="user.id"
           (click)="userItemClick(user)">
@@ -38,7 +38,7 @@
         </li>
       </ul>
     </div>
-    
+
     <div class="users-footer">
       <a class="logout" routerLink="/welcome" id="logout">← Back</a>
     </div>
@@ -58,11 +58,11 @@
         <span>{{ getSelectedUser()?.firstName }} {{ getSelectedUser()?.lastName }}</span>
       </div>
     </div>
-    
+
     <div class="chat-messages-container">
       <div id="chat-messages" (scroll)="onScroll($event)">
-        <div 
-          *ngFor="let message of messages; let i = index" 
+        <div
+          *ngFor="let message of messages; let i = index"
           class="message"
           [class.sender]="isMessageFromCurrentUser(message)"
           [class.receiver]="!isMessageFromCurrentUser(message)"
@@ -80,17 +80,20 @@
 
     <form id="messageForm" name="messageForm" [class.hidden]="!selectedUserId" (ngSubmit)="sendMessage($event)">
       <div class="message-input">
-        <input 
-          autocomplete="off" 
-          type="text" 
-          id="message" 
+        <textarea
+          autocomplete="off"
+          id="message"
           placeholder="💬 Type your message..."
           [(ngModel)]="newMessage"
           name="message"
           required
           minlength="1"
-          maxlength="1000">
-        <button 
+          maxlength="1000"
+          rows="1"
+          (keydown)="onKeyDown($event)"
+          (input)="autoResize($event)">
+        </textarea>
+        <button
           type="submit"
           [disabled]="!newMessage.trim() || !selectedUserId">
           ✈️ Send
