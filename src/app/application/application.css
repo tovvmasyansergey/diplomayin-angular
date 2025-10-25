@@ -1,6 +1,6 @@
 .application-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--mat-sys-primary) 0%, var(--mat-sys-secondary) 50%, var(--mat-sys-tertiary) 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e40af 30%, #3b82f6 60%, #f59e0b 100%);
   padding: 40px 20px;
   position: relative;
   overflow: hidden;
@@ -14,9 +14,9 @@
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(circle at 20% 80%, rgba(0, 127, 255, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(3, 169, 244, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(0, 188, 212, 0.2) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(251, 191, 36, 0.2) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -30,7 +30,7 @@
 .application-title {
   font-size: 3.5rem;
   font-weight: 300;
-  color: var(--mat-sys-on-primary);
+  color: #fff;
   margin-bottom: 20px;
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   letter-spacing: 2px;
@@ -38,9 +38,10 @@
 
 .application-subtitle {
   font-size: 1.3rem;
-  color: var(--mat-sys-on-primary);
+  color: rgba(255, 255, 255, 0.9);
   opacity: 0.9;
   font-weight: 300;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .application-content {
@@ -98,21 +99,22 @@
 .card-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--mat-sys-on-primary-container);
+  color: #fff;
   margin-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .card-description {
   font-size: 1rem;
-  color: var(--mat-sys-on-primary-container);
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 25px;
   line-height: 1.5;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .card-button {
-  background: linear-gradient(135deg, var(--mat-sys-primary) 0%, var(--mat-sys-secondary) 100%);
-  color: var(--mat-sys-on-primary);
+  background: linear-gradient(135deg, #3b82f6 0%, #f59e0b 100%);
+  color: #fff;
   border: none;
   border-radius: 15px;
   padding: 15px 30px;
@@ -125,12 +127,13 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  box-shadow: 0 4px 15px rgba(0, 127, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 .card-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 127, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, #1e40af 0%, #fbbf24 100%);
 }
 
 .button-icon {
@@ -165,7 +168,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--mat-sys-primary) 0%, var(--mat-sys-secondary) 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #f59e0b 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -173,7 +176,7 @@
 }
 
 .avatar-text {
-  color: var(--mat-sys-on-primary);
+  color: #fff;
   font-size: 1.5rem;
   font-weight: 600;
 }
@@ -185,19 +188,20 @@
 .user-name {
   font-size: 1.3rem;
   font-weight: 600;
-  color: var(--mat-sys-on-primary-container);
+  color: #fff;
   margin-bottom: 5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .user-email {
   font-size: 1rem;
-  color: var(--mat-sys-on-primary-container);
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .logout-button {
-  background: linear-gradient(135deg, var(--mat-sys-error) 0%, #dc3545 100%);
-  color: var(--mat-sys-on-error);
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: #fff;
   border: none;
   border-radius: 15px;
   padding: 12px 20px;
@@ -208,12 +212,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 15px rgba(186, 26, 26, 0.3);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
 }
 
 .logout-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(186, 26, 26, 0.4);
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4);
 }
 
 .logout-icon {
