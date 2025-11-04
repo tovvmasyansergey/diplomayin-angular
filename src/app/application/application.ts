@@ -51,6 +51,10 @@ export class ApplicationComponent {
     this.router.navigate(['/education']);
   }
 
+  navigateToArchitecturalCalculator(): void {
+    this.router.navigate(['/architectural-calculator']);
+  }
+
   navigateToAbout(): void {
     this.router.navigate(['/about']);
   }

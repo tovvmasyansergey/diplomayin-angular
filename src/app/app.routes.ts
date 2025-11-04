@@ -6,6 +6,7 @@ import {AboutComponent} from './about/about.component';
 import {AllUsersComponent} from './all-users/all-users.component';
 import {ChatComponent} from './chat/chat.component';
 import {ApplicationComponent} from './application/application';
+import {ArchitecturalCalculatorComponent} from './architectural-calculator/architectural-calculator';
 import {AuthGuard} from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -16,6 +17,7 @@ export const routes: Routes = [
   {path: 'about', component: AboutComponent},
   {path: 'all-users', component: AllUsersComponent, canActivate: [AuthGuard]},
   {path: 'chat', component: ChatComponent, canActivate: [AuthGuard]},
+  {path: 'architectural-calculator', component: ArchitecturalCalculatorComponent, canActivate: [AuthGuard]},
   {path: 'register', loadChildren: () => import('./register/register.module').then(m => m.RegisterModule)},
   {path: 'login', loadChildren: () => import('./login/login.module').then(m => m.LoginModule)},
   {path: '**', redirectTo: ''}

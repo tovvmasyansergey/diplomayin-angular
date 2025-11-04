@@ -1,0 +1,378 @@
+<div class="calculator-container">
+  <div class="calculator-header">
+    <h1 class="calculator-title">🏗️ Архитектурный Калькулятор</h1>
+    <p class="calculator-subtitle">Расчет кривых второго порядка для строительных конструкций</p>
+  </div>
+
+  <div class="calculator-content">
+    <!-- Выбор типа кривой -->
+    <div class="curve-selection">
+      <h2>Выберите тип конструкции:</h2>
+      <div class="curve-tabs">
+        <button 
+          class="curve-tab" 
+          [class.active]="selectedCurveType === 'parabola'"
+          (click)="selectedCurveType = 'parabola'; onCurveTypeChange()">
+          <span class="tab-icon">🌉</span>
+          <span class="tab-title">Парабола</span>
+          <span class="tab-desc">Арки, мосты</span>
+        </button>
+        
+        <button 
+          class="curve-tab" 
+          [class.active]="selectedCurveType === 'ellipse'"
+          (click)="selectedCurveType = 'ellipse'; onCurveTypeChange()">
+          <span class="tab-icon">🏛️</span>
+          <span class="tab-title">Эллипс</span>
+          <span class="tab-desc">Купола, своды</span>
+        </button>
+        
+        <button 
+          class="curve-tab" 
+          [class.active]="selectedCurveType === 'hyperbola'"
+          (click)="selectedCurveType = 'hyperbola'; onCurveTypeChange()">
+          <span class="tab-icon">🗼</span>
+          <span class="tab-title">Гипербола</span>
+          <span class="tab-desc">Башни, оболочки</span>
+        </button>
+      </div>
+      
+      <div class="curve-description">
+        <p><strong>Типичные объекты:</strong> {{ getCurveTypeDescription() }}</p>
+      </div>
+    </div>
+
+    <!-- Параметры ввода -->
+    <div class="parameters-section">
+      <h2>Параметры конструкции:</h2>
+      
+      <!-- Параметры параболы -->
+      <div *ngIf="selectedCurveType === 'parabola'" class="parameter-group">
+        <div class="parameter-item">
+          <label for="span">Пролёт (L), м:</label>
+          <input 
+            type="number" 
+            id="span" 
+            [(ngModel)]="parabolaParams.span" 
+            min="1" 
+            max="200"
+            step="0.1">
+          <span class="parameter-help">Расстояние между опорами</span>
+        </div>
+        
+        <div class="parameter-item">
+          <label for="height">Высота (H), м:</label>
+          <input 
+            type="number" 
+            id="height" 
+            [(ngModel)]="parabolaParams.height" 
+            min="0.1" 
+            max="50"
+            step="0.1">
+          <span class="parameter-help">Максимальная высота в центре</span>
+        </div>
+        
+        <div class="parameter-item">
+          <label for="thickness">Толщина, м:</label>
+          <input 
+            type="number" 
+            id="thickness" 
+            [(ngModel)]="parabolaParams.thickness" 
+            min="0.01" 
+            max="5"
+            step="0.01">
+          <span class="parameter-help">Толщина конструкции</span>
+        </div>
+      </div>
+
+      <!-- Параметры эллипса -->
+      <div *ngIf="selectedCurveType === 'ellipse'" class="parameter-group">
+        <div class="parameter-item">
+          <label for="a">Большая полуось (a), м:</label>
+          <input 
+            type="number" 
+            id="a" 
+            [(ngModel)]="ellipseParams.a" 
+            min="1" 
+            max="100"
+            step="0.1">
+          <span class="parameter-help">Половина длины по горизонтали</span>
+        </div>
+        
+        <div class="parameter-item">
+          <label for="b">Малая полуось (b), м:</label>
+          <input 
+            type="number" 
+            id="b" 
+            [(ngModel)]="ellipseParams.b" 
+            min="0.1" 
+            max="50"
+            step="0.1">
+          <span class="parameter-help">Половина высоты по вертикали</span>
+        </div>
+        
+        <div class="parameter-item">
+          <label for="thickness">Толщина, м:</label>
+          <input 
+            type="number" 
+            id="thickness" 
+            [(ngModel)]="ellipseParams.thickness" 
+            min="0.01" 
+            max="5"
+            step="0.01">
+          <span class="parameter-help">Толщина конструкции</span>
+        </div>
+      </div>
+
+      <!-- Параметры гиперболы -->
+      <div *ngIf="selectedCurveType === 'hyperbola'" class="parameter-group">
+        <div class="parameter-item">
+          <label for="a">Параметр a, м:</label>
+          <input 
+            type="number" 
+            id="a" 
+            [(ngModel)]="hyperbolaParams.a" 
+            min="0.1" 
+            max="50"
+            step="0.1">
+          <span class="parameter-help">Расстояние от центра до вершины</span>
+        </div>
+        
+        <div class="parameter-item">
+          <label for="b">Параметр b, м:</label>
+          <input 
+            type="number" 
+            id="b" 
+            [(ngModel)]="hyperbolaParams.b" 
+            min="0.1" 
+            max="50"
+            step="0.1">
+          <span class="parameter-help">Отвечает за угол раскрытия</span>
+        </div>
+        
+        <div class="parameter-item">
+          <label for="thickness">Толщина, м:</label>
+          <input 
+            type="number" 
+            id="thickness" 
+            [(ngModel)]="hyperbolaParams.thickness" 
+            min="0.01" 
+            max="5"
+            step="0.01">
+          <span class="parameter-help">Толщина конструкции</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Выбор материала -->
+    <div class="material-selection">
+      <h2>Выберите материал:</h2>
+      <div class="material-grid">
+        <div 
+          *ngFor="let material of materials" 
+          class="material-card"
+          [class.selected]="selectedMaterial?.name === material.name"
+          (click)="selectedMaterial = material">
+          <div class="material-info">
+            <h3>{{ material.name }}</h3>
+            <p>Плотность: {{ material.density }} кг/м³</p>
+            <p>Стоимость: {{ material.costPerUnit | number }} руб/м³</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Кнопки управления -->
+    <div class="action-buttons">
+      <button class="btn-calculate" (click)="calculate()">
+        <span class="btn-icon">🧮</span>
+        Рассчитать
+      </button>
+      
+      <button class="btn-reset" (click)="resetCalculation()">
+        <span class="btn-icon">🔄</span>
+        Сбросить
+      </button>
+
+
+      <button class="btn-chart" (click)="toggle2DChart()" [class.active]="showChart">
+        <span class="btn-icon">📊</span>
+        {{ showChart ? 'Скрыть график' : 'Показать график' }}
+      </button>
+    </div>
+
+    <!-- Результаты -->
+    <div *ngIf="showResults && calculationResult" class="results-section">
+      <h2>Результаты расчета:</h2>
+      
+      <div class="results-grid">
+        <!-- Основная информация -->
+        <div class="result-card equation-card">
+          <h3>📐 Уравнение</h3>
+          <div class="equation">{{ calculationResult.equation }}</div>
+        </div>
+
+        <!-- Измерения -->
+        <div class="result-card measurements-card">
+          <h3>📏 Измерения</h3>
+          <div class="measurement-item">
+            <span class="label">Площадь:</span>
+            <span class="value">{{ calculationResult.measurements.area | number:'1.2-2' }} м²</span>
+          </div>
+          <div class="measurement-item">
+            <span class="label">Длина дуги:</span>
+            <span class="value">{{ calculationResult.measurements.arcLength | number:'1.2-2' }} м</span>
+          </div>
+          <div class="measurement-item">
+            <span class="label">Объем:</span>
+            <span class="value">{{ calculationResult.measurements.volume | number:'1.2-2' }} м³</span>
+          </div>
+        </div>
+
+        <!-- Материалы -->
+        <div class="result-card materials-card">
+          <h3>🏗️ Материалы</h3>
+          <div class="material-item">
+            <span class="label">Материал:</span>
+            <span class="value">{{ calculationResult.materialEstimate.material.name }}</span>
+          </div>
+          <div class="material-item">
+            <span class="label">Количество:</span>
+            <span class="value">{{ calculationResult.materialEstimate.quantity | number:'1.2-2' }} м³</span>
+          </div>
+          <div class="material-item">
+            <span class="label">Вес:</span>
+            <span class="value">{{ calculationResult.materialEstimate.weight | number:'1.0-0' }} кг</span>
+          </div>
+          <div class="material-item">
+            <span class="label">Стоимость:</span>
+            <span class="value">{{ calculationResult.materialEstimate.totalCost | number:'1.0-0' }} руб</span>
+          </div>
+        </div>
+
+        <!-- Свойства -->
+        <div class="result-card properties-card">
+          <h3>🔍 Свойства</h3>
+          <div *ngIf="calculationResult.properties.foci" class="property-item">
+            <span class="label">Фокусы:</span>
+            <div class="foci-list">
+              <div *ngFor="let focus of calculationResult.properties.foci">
+                ({{ focus.x | number:'1.2-2' }}, {{ focus.y | number:'1.2-2' }})
+              </div>
+            </div>
+          </div>
+          <div *ngIf="calculationResult.properties.eccentricity" class="property-item">
+            <span class="label">Эксцентриситет:</span>
+            <span class="value">{{ calculationResult.properties.eccentricity | number:'1.3-3' }}</span>
+          </div>
+          <div *ngIf="calculationResult.properties.asymptotes" class="property-item">
+            <span class="label">Асимптоты:</span>
+            <div class="asymptotes-list">
+              <div *ngFor="let asymptote of calculationResult.properties.asymptotes">
+                {{ asymptote }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Структурный анализ -->
+        <div *ngIf="structuralAnalysis" class="result-card structural-card">
+          <h3>🏗️ Структурный анализ</h3>
+          <div class="analysis-item">
+            <span class="label">Макс. напряжение:</span>
+            <span class="value">{{ structuralAnalysis.maxStress | number:'1.2-2' }} МПа</span>
+          </div>
+          <div class="analysis-item">
+            <span class="label">Коэф. безопасности:</span>
+            <span class="value" [class.safe]="structuralAnalysis.safetyFactor >= 2" [class.warning]="structuralAnalysis.safetyFactor < 2">
+              {{ structuralAnalysis.safetyFactor | number:'1.2-2' }}
+            </span>
+          </div>
+          <div class="analysis-item">
+            <span class="label">Прогиб:</span>
+            <span class="value">{{ structuralAnalysis.deflection | number:'1.2-2' }} мм</span>
+          </div>
+          <div class="analysis-item">
+            <span class="label">Критическая нагрузка:</span>
+            <span class="value">{{ structuralAnalysis.bucklingLoad | number:'1.0-0' }} Н</span>
+          </div>
+          <div class="analysis-item">
+            <span class="label">Собственная частота:</span>
+            <span class="value">{{ structuralAnalysis.naturalFrequency | number:'1.2-2' }} Гц</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Рекомендации -->
+      <div *ngIf="recommendations && recommendations.length > 0" class="recommendations-section">
+        <h3>💡 Рекомендации по конструкции</h3>
+        
+        <div class="recommendations-list">
+          <div *ngFor="let rec of recommendations" class="recommendation-card" 
+               [style.border-left-color]="getSeverityColor(rec.severity)">
+            <div class="recommendation-header">
+              <span class="recommendation-icon">{{ getRecommendationIcon(rec.type) }}</span>
+              <h4 class="recommendation-title">{{ rec.title }}</h4>
+              <span class="recommendation-severity" [style.color]="getSeverityColor(rec.severity)">
+                {{ rec.severity === 'critical' ? 'Критично' : 
+                   rec.severity === 'high' ? 'Высокая' : 
+                   rec.severity === 'medium' ? 'Средняя' : 'Низкая' }}
+              </span>
+            </div>
+            
+            <div class="recommendation-body">
+              <p class="recommendation-description">{{ rec.description }}</p>
+              
+              <div *ngIf="rec.currentValue !== undefined" class="recommendation-values">
+                <div class="value-item">
+                  <span class="label">Текущее значение:</span>
+                  <span class="value">{{ rec.currentValue | number:'1.2-2' }}</span>
+                </div>
+                <div *ngIf="rec.recommendedValue" class="value-item">
+                  <span class="label">Рекомендуемое:</span>
+                  <span class="value recommended">{{ rec.recommendedValue | number:'1.2-2' }}</span>
+                </div>
+              </div>
+              
+              <div *ngIf="rec.suggestion" class="recommendation-suggestion">
+                <strong>💬 Рекомендация:</strong> {{ rec.suggestion }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- График -->
+      <div *ngIf="calculationResult && showChart" class="graph-section">
+        <h3>📊 График кривой</h3>
+        <div class="graph-container">
+          <canvas #chartCanvas></canvas>
+        </div>
+      </div>
+
+
+      <!-- Экспорт -->
+      <div class="export-section">
+        <h3>💾 Экспорт результатов</h3>
+        <div class="export-buttons">
+          <button class="btn-export" (click)="exportResults('json')">
+            <span class="btn-icon">📄</span>
+            JSON
+          </button>
+          <button class="btn-export" (click)="exportResults('pdf')">
+            <span class="btn-icon">📋</span>
+            PDF
+          </button>
+          <button class="btn-export" (click)="exportResults('excel')">
+            <span class="btn-icon">📊</span>
+            Excel
+          </button>
+          <button class="btn-export" (click)="exportResults('word')">
+            <span class="btn-icon">📝</span>
+            Word
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

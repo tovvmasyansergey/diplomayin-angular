@@ -34,7 +34,7 @@ export class WebSocketService {
         
         // Подписываемся на личные сообщения
         this.stompClient.subscribe(`/user/${userId}/queue/messages`, (message: any) => {
-          console.log('💬 Received message:', message.body);
+          console.log('💬 Received WebSocket message:', message.body);
           try {
             const notification: ChatNotification = JSON.parse(message.body);
             console.log('💬 Parsed notification:', notification);
@@ -50,6 +50,8 @@ export class WebSocketService {
             };
             
             console.log('💬 Converted to ChatMessage:', chatMessage);
+            console.log('💬 Adding message to stream. Current messages count:', this.messages.value.length);
+            
             this.addMessage(chatMessage);
           } catch (error) {
             console.error('❌ Error parsing message:', error);
@@ -98,6 +100,17 @@ export class WebSocketService {
 
   private addMessage(message: ChatMessage): void {
     const currentMessages = this.messages.value;
+    
+    // Проверяем, что сообщение не дублируется
+    const messageExists = currentMessages.some(m => 
+      m.id && message.id && m.id === message.id
+    );
+    
+    if (messageExists) {
+      console.log('⚠️ Message already exists, skipping:', message.id);
+      return;
+    }
+    
     const updatedMessages = [...currentMessages, message];
     
     // Сортируем сообщения по времени (старые сверху, новые снизу)
@@ -108,5 +121,6 @@ export class WebSocketService {
     });
     
     this.messages.next(sortedMessages);
+    console.log('✅ New message added to stream, total messages:', sortedMessages.length);
   }
 }

@@ -95,34 +95,70 @@ export class ChatComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Подписка на сообщения
+    // Подписка на новые сообщения через WebSocket
     this.subscriptions.push(
-      this.webSocketService.getMessages().subscribe(messages => {
-        console.log('📨 WebSocket messages received:', messages.length);
+      this.webSocketService.getMessages().subscribe(allMessages => {
+        console.log('📨 WebSocket messages received:', allMessages.length);
         console.log('📨 Current selected user ID:', this.selectedUserId);
         console.log('📨 Current user ID:', this.currentUser?.id);
 
-        // Проверяем, что это сообщения для текущего выбранного пользователя
-        if (this.selectedUserId && messages.length > 0) {
-          // Фильтруем сообщения только для текущего диалога
-          const currentDialogMessages = messages.filter(msg => {
-            const senderMatch = msg.senderId.toString() === this.currentUser.id.toString() && msg.recipientId.toString() === this.selectedUserId;
-            const recipientMatch = msg.senderId.toString() === this.selectedUserId && msg.recipientId.toString() === this.currentUser.id.toString();
-            return senderMatch || recipientMatch;
-          });
-
-          console.log('📨 Filtered messages for current dialog:', currentDialogMessages.length);
-          console.log('📨 All messages:', messages);
-          console.log('📨 Filtered messages:', currentDialogMessages);
-
-          if (currentDialogMessages.length > 0) {
-            this.messages = currentDialogMessages;
-            this.saveMessages();
-
-            // Прокручиваем к последнему сообщению
-            this.scrollToBottom();
-          }
+        if (!this.selectedUserId) {
+          console.log('⚠️ No user selected, skipping message update');
+          return;
         }
+
+        // Получаем последнее сообщение из потока (самое новое)
+        if (allMessages.length === 0) {
+          return;
+        }
+
+        const latestMessage = allMessages[allMessages.length - 1];
+        console.log('📨 Latest message in stream:', latestMessage);
+
+        // Проверяем, относится ли это сообщение к текущему диалогу
+        const isFromCurrentDialog = 
+          (latestMessage.senderId.toString() === this.currentUser.id.toString() && 
+           latestMessage.recipientId.toString() === this.selectedUserId) ||
+          (latestMessage.senderId.toString() === this.selectedUserId && 
+           latestMessage.recipientId.toString() === this.currentUser.id.toString());
+
+        console.log('📨 Is message from current dialog:', isFromCurrentDialog);
+        console.log('📨 Latest message senderId:', latestMessage.senderId);
+        console.log('📨 Latest message recipientId:', latestMessage.recipientId);
+
+        if (!isFromCurrentDialog) {
+          console.log('⚠️ Message not from current dialog, skipping');
+          return;
+        }
+
+        // Проверяем, есть ли это сообщение уже в списке
+        const messageExists = this.messages.some(m => 
+          m.id && latestMessage.id && m.id === latestMessage.id
+        );
+
+        if (messageExists) {
+          console.log('⚠️ Message already exists, skipping:', latestMessage.id);
+          return;
+        }
+
+        console.log('➕ Adding new message to dialog:', latestMessage.content);
+        
+        // Добавляем новое сообщение
+        this.messages = [...this.messages, latestMessage];
+        
+        // Сортируем сообщения по времени
+        this.messages = this.messages.sort((a, b) => {
+          const dateA = new Date(a.timestamp).getTime();
+          const dateB = new Date(b.timestamp).getTime();
+          return dateA - dateB;
+        });
+        
+        this.saveMessages();
+
+        // Прокручиваем к последнему сообщению
+        setTimeout(() => {
+          this.scrollToBottom();
+        }, 100);
       })
     );
 
