@@ -97,68 +97,64 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     // Подписка на новые сообщения через WebSocket
     this.subscriptions.push(
-      this.webSocketService.getMessages().subscribe(allMessages => {
-        console.log('📨 WebSocket messages received:', allMessages.length);
+      this.webSocketService.getNewMessage().subscribe(newMessage => {
+        if (!newMessage) {
+          return;
+        }
+
+        console.log('📨 New WebSocket message received:', newMessage);
         console.log('📨 Current selected user ID:', this.selectedUserId);
         console.log('📨 Current user ID:', this.currentUser?.id);
+        console.log('📨 Message senderId:', newMessage.senderId);
+        console.log('📨 Message recipientId:', newMessage.recipientId);
 
-        if (!this.selectedUserId) {
-          console.log('⚠️ No user selected, skipping message update');
+        // Проверяем, является ли текущий пользователь получателем сообщения
+        // (отправитель не должен получать свое сообщение обратно через WebSocket)
+        const isRecipient = newMessage.recipientId.toString() === this.currentUser.id.toString();
+
+        if (!isRecipient) {
+          console.log('⚠️ Message not for current user as recipient, skipping');
           return;
         }
 
-        // Получаем последнее сообщение из потока (самое новое)
-        if (allMessages.length === 0) {
-          return;
+        // Определяем ID собеседника (отправителя, так как текущий пользователь - получатель)
+        const otherUserId = newMessage.senderId.toString();
+
+        // Если выбран диалог с этим пользователем, добавляем сообщение в список
+        if (this.selectedUserId === otherUserId) {
+          // Проверяем, есть ли это сообщение уже в списке
+          const messageExists = this.messages.some(m =>
+            m.id && newMessage.id && m.id === newMessage.id
+          );
+
+          if (messageExists) {
+            console.log('⚠️ Message already exists, skipping:', newMessage.id);
+            return;
+          }
+
+          console.log('➕ Adding new message to current dialog:', newMessage.content);
+
+          // Добавляем новое сообщение
+          this.messages = [...this.messages, newMessage];
+
+          // Сортируем сообщения по времени
+          this.messages = this.messages.sort((a, b) => {
+            const dateA = new Date(a.timestamp).getTime();
+            const dateB = new Date(b.timestamp).getTime();
+            return dateA - dateB;
+          });
+
+          this.saveMessages();
+
+          // Прокручиваем к последнему сообщению
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 100);
+        } else {
+          // Сообщение от другого пользователя - сохраняем его для будущего отображения
+          console.log('💾 Saving message for future display from user:', otherUserId);
+          this.saveMessageForUser(otherUserId, newMessage);
         }
-
-        const latestMessage = allMessages[allMessages.length - 1];
-        console.log('📨 Latest message in stream:', latestMessage);
-
-        // Проверяем, относится ли это сообщение к текущему диалогу
-        const isFromCurrentDialog = 
-          (latestMessage.senderId.toString() === this.currentUser.id.toString() && 
-           latestMessage.recipientId.toString() === this.selectedUserId) ||
-          (latestMessage.senderId.toString() === this.selectedUserId && 
-           latestMessage.recipientId.toString() === this.currentUser.id.toString());
-
-        console.log('📨 Is message from current dialog:', isFromCurrentDialog);
-        console.log('📨 Latest message senderId:', latestMessage.senderId);
-        console.log('📨 Latest message recipientId:', latestMessage.recipientId);
-
-        if (!isFromCurrentDialog) {
-          console.log('⚠️ Message not from current dialog, skipping');
-          return;
-        }
-
-        // Проверяем, есть ли это сообщение уже в списке
-        const messageExists = this.messages.some(m => 
-          m.id && latestMessage.id && m.id === latestMessage.id
-        );
-
-        if (messageExists) {
-          console.log('⚠️ Message already exists, skipping:', latestMessage.id);
-          return;
-        }
-
-        console.log('➕ Adding new message to dialog:', latestMessage.content);
-        
-        // Добавляем новое сообщение
-        this.messages = [...this.messages, latestMessage];
-        
-        // Сортируем сообщения по времени
-        this.messages = this.messages.sort((a, b) => {
-          const dateA = new Date(a.timestamp).getTime();
-          const dateB = new Date(b.timestamp).getTime();
-          return dateA - dateB;
-        });
-        
-        this.saveMessages();
-
-        // Прокручиваем к последнему сообщению
-        setTimeout(() => {
-          this.scrollToBottom();
-        }, 100);
       })
     );
 
@@ -297,7 +293,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.hasMoreMessages = true;
     this.isLoadingMessages = true;
 
-    // Сначала пытаемся загрузить сохраненные сообщения
+    // Сначала пытаемся загрузить сохраненные сообщения (включая новые из WebSocket)
     this.loadSavedMessages();
 
     try {
@@ -320,14 +316,43 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.totalMessages = response.totalElements;
 
           // Сортируем сообщения по времени (старые сверху, новые снизу)
-          const sortedMessages = response.content.sort((a, b) => {
+          const sortedApiMessages = response.content.sort((a, b) => {
             const dateA = new Date(a.timestamp).getTime();
             const dateB = new Date(b.timestamp).getTime();
             return dateA - dateB; // Старые сообщения сверху, новые снизу
           });
 
-          this.messages = sortedMessages;
-          this.webSocketService.setMessages(sortedMessages);
+          // Объединяем сообщения из API с сохраненными сообщениями (из WebSocket)
+          const savedMessages = this.messages || [];
+          const allMessagesMap = new Map<number, ChatMessage>();
+
+          // Добавляем сообщения из API
+          sortedApiMessages.forEach(msg => {
+            if (msg.id) {
+              allMessagesMap.set(msg.id, msg);
+            }
+          });
+
+          // Добавляем сохраненные сообщения (которые могут быть новее)
+          savedMessages.forEach(msg => {
+            if (msg.id && !allMessagesMap.has(msg.id)) {
+              allMessagesMap.set(msg.id, msg);
+            } else if (!msg.id) {
+              // Сообщения без ID (локальные) добавляем тоже
+              allMessagesMap.set(Date.now() + Math.random(), msg);
+            }
+          });
+
+          // Преобразуем Map обратно в массив и сортируем
+          const mergedMessages = Array.from(allMessagesMap.values()).sort((a, b) => {
+            const dateA = new Date(a.timestamp).getTime();
+            const dateB = new Date(b.timestamp).getTime();
+            return dateA - dateB;
+          });
+
+          this.messages = mergedMessages;
+          this.webSocketService.setMessages(mergedMessages);
+          this.saveMessages(); // Сохраняем объединенные сообщения
           this.isLoadingMessages = false;
 
           console.log('📋 Messages assigned to this.messages:', this.messages.length);
@@ -399,6 +424,38 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.selectedUserId) {
       const key = `chat_${this.currentUser.id}_${this.selectedUserId}`;
       localStorage.setItem(key, JSON.stringify(this.messages));
+    }
+  }
+
+  private saveMessageForUser(userId: string, message: ChatMessage): void {
+    if (!this.currentUser) return;
+
+    const key = `chat_${this.currentUser.id}_${userId}`;
+    const saved = localStorage.getItem(key);
+    let savedMessages: ChatMessage[] = [];
+
+    if (saved) {
+      try {
+        savedMessages = JSON.parse(saved);
+      } catch (error) {
+        console.error('❌ Error parsing saved messages:', error);
+      }
+    }
+
+    // Проверяем, нет ли уже этого сообщения
+    const messageExists = savedMessages.some(m =>
+      m.id && message.id && m.id === message.id
+    );
+
+    if (!messageExists) {
+      savedMessages.push(message);
+      // Сортируем по времени
+      savedMessages = savedMessages.sort((a, b) => {
+        const dateA = new Date(a.timestamp).getTime();
+        const dateB = new Date(b.timestamp).getTime();
+        return dateA - dateB;
+      });
+      localStorage.setItem(key, JSON.stringify(savedMessages));
     }
   }
 

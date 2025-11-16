@@ -12,6 +12,7 @@ export class WebSocketService {
   private stompClient: any;
   private connected = new BehaviorSubject<boolean>(false);
   private messages = new BehaviorSubject<ChatMessage[]>([]);
+  private newMessage = new BehaviorSubject<ChatMessage | null>(null);
 
   constructor() { }
 
@@ -20,25 +21,31 @@ export class WebSocketService {
     console.log('🔌 User ID:', userId);
     console.log('🔌 SockJS available:', typeof SockJS !== 'undefined');
     console.log('🔌 Stomp available:', typeof Stomp !== 'undefined');
-    
+
     try {
       // Используем SockJS для совместимости с бэкендом
       const socket = new SockJS('http://localhost:7404/ws');
       console.log('🔌 SockJS socket created:', socket);
       this.stompClient = Stomp.over(socket);
       console.log('🔌 Stomp client created:', this.stompClient);
-      
+
+      // Отключаем отладочные сообщения STOMP для чистоты консоли
+      this.stompClient.debug = () => {}; // Отключаем дебаг логи STOMP
+
       this.stompClient.connect({}, (frame: any) => {
-        console.log('✅ WebSocket connected:', frame);
+        console.log('✅ WebSocket connected successfully:', frame);
         this.connected.next(true);
-        
-        // Подписываемся на личные сообщения
-        this.stompClient.subscribe(`/user/${userId}/queue/messages`, (message: any) => {
-          console.log('💬 Received WebSocket message:', message.body);
+
+        // Подписываемся на личные сообщения через общий топик
+        const subscriptionDestination = `/topic/user/${userId}`;
+        console.log('📡 Subscribing to:', subscriptionDestination);
+
+        const subscription = this.stompClient.subscribe(subscriptionDestination, (message: any) => {
+          console.log('💬 Received WebSocket message on', subscriptionDestination, ':', message.body);
           try {
             const notification: ChatNotification = JSON.parse(message.body);
             console.log('💬 Parsed notification:', notification);
-            
+
             // Конвертируем уведомление в ChatMessage
             const chatMessage: ChatMessage = {
               id: notification.id,
@@ -48,22 +55,34 @@ export class WebSocketService {
               timestamp: new Date(),
               messageType: 'TEXT'
             };
-            
+
             console.log('💬 Converted to ChatMessage:', chatMessage);
             console.log('💬 Adding message to stream. Current messages count:', this.messages.value.length);
-            
+
+            // Отправляем новое сообщение через отдельный Observable
+            this.newMessage.next(chatMessage);
+
+            // Также добавляем в общий поток для обратной совместимости
             this.addMessage(chatMessage);
           } catch (error) {
             console.error('❌ Error parsing message:', error);
+            console.error('❌ Message body was:', message.body);
           }
         });
-        
-        console.log('📡 Subscribed to messages for user:', userId);
+
+        console.log('✅ Successfully subscribed to messages for user:', userId, 'on', subscriptionDestination);
       }, (error: any) => {
-        console.error('❌ WebSocket error:', error);
+        console.error('❌ WebSocket connection error:', error);
+        console.error('❌ Error details:', JSON.stringify(error));
         this.connected.next(false);
+
+        // Пытаемся переподключиться через 3 секунды
+        setTimeout(() => {
+          console.log('🔄 Attempting to reconnect WebSocket...');
+          this.connect(userId);
+        }, 3000);
       });
-      
+
     } catch (error) {
       console.error('❌ Failed to create WebSocket:', error);
       this.connected.next(false);
@@ -94,32 +113,36 @@ export class WebSocketService {
     return this.messages.asObservable();
   }
 
+  getNewMessage(): Observable<ChatMessage | null> {
+    return this.newMessage.asObservable();
+  }
+
   setMessages(messages: ChatMessage[]): void {
     this.messages.next(messages);
   }
 
   private addMessage(message: ChatMessage): void {
     const currentMessages = this.messages.value;
-    
+
     // Проверяем, что сообщение не дублируется
-    const messageExists = currentMessages.some(m => 
+    const messageExists = currentMessages.some(m =>
       m.id && message.id && m.id === message.id
     );
-    
+
     if (messageExists) {
       console.log('⚠️ Message already exists, skipping:', message.id);
       return;
     }
-    
+
     const updatedMessages = [...currentMessages, message];
-    
+
     // Сортируем сообщения по времени (старые сверху, новые снизу)
     const sortedMessages = updatedMessages.sort((a, b) => {
       const dateA = new Date(a.timestamp).getTime();
       const dateB = new Date(b.timestamp).getTime();
       return dateA - dateB; // Старые сообщения сверху, новые снизу
     });
-    
+
     this.messages.next(sortedMessages);
     console.log('✅ New message added to stream, total messages:', sortedMessages.length);
   }
