@@ -17,10 +17,44 @@
   text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+.lang-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.lang-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.lang-btn.active {
+  background: rgba(59, 130, 246, 0.8);
+  border-color: rgba(59, 130, 246, 1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
 .calculator-subtitle {
   font-size: 1.2rem;
   opacity: 0.9;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1.5rem;
+}
+
+.language-selector {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
 }
 
 .calculator-content {
@@ -52,21 +86,106 @@
   border-radius: 15px;
   padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
   backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.curve-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.curve-tab:hover::before {
+  left: 100%;
 }
 
 .curve-tab:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
 }
 
-.curve-tab.active {
-  background: linear-gradient(135deg, #3b82f6, #f59e0b);
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+/* Парабола - градиент от оранжевого к голубому */
+.curve-tab-parabola {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(59, 130, 246, 0.2));
+}
+
+.curve-tab-parabola:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(59, 130, 246, 0.4));
+}
+
+.curve-tab-parabola.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 30%, #60a5fa 70%, #3b82f6 100%);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(245, 158, 11, 0.5), 0 0 25px rgba(59, 130, 246, 0.4);
+  animation: pulse-parabola 3s ease-in-out infinite;
+}
+
+@keyframes pulse-parabola {
+  0%, 100% {
+    box-shadow: 0 10px 40px rgba(245, 158, 11, 0.5), 0 0 25px rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 12px 50px rgba(245, 158, 11, 0.7), 0 0 35px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Эллипс - градиент от фиолетового к розовому */
+.curve-tab-ellipse {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+}
+
+.curve-tab-ellipse:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(236, 72, 153, 0.4));
+}
+
+.curve-tab-ellipse.active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 30%, #f472b6 70%, #ec4899 100%);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(139, 92, 246, 0.5), 0 0 25px rgba(236, 72, 153, 0.4);
+  animation: pulse-ellipse 3s ease-in-out infinite;
+}
+
+@keyframes pulse-ellipse {
+  0%, 100% {
+    box-shadow: 0 10px 40px rgba(139, 92, 246, 0.5), 0 0 25px rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 12px 50px rgba(139, 92, 246, 0.7), 0 0 35px rgba(236, 72, 153, 0.6);
+  }
+}
+
+/* Гипербола - градиент от красного к оранжевому */
+.curve-tab-hyperbola {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(251, 146, 60, 0.2));
+}
+
+.curve-tab-hyperbola:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(251, 146, 60, 0.4));
+}
+
+.curve-tab-hyperbola.active {
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 30%, #fb923c 70%, #f97316 100%);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(239, 68, 68, 0.5), 0 0 25px rgba(251, 146, 60, 0.4);
+  animation: pulse-hyperbola 3s ease-in-out infinite;
+}
+
+@keyframes pulse-hyperbola {
+  0%, 100% {
+    box-shadow: 0 10px 40px rgba(239, 68, 68, 0.5), 0 0 25px rgba(251, 146, 60, 0.4);
+  }
+  50% {
+    box-shadow: 0 12px 50px rgba(239, 68, 68, 0.7), 0 0 35px rgba(251, 146, 60, 0.6);
+  }
 }
 
 .tab-icon {
@@ -76,14 +195,24 @@
 }
 
 .tab-title {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
   display: block;
   margin-bottom: 0.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.curve-tab.active .tab-title {
+  color: #0f172a;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
 }
 
 .tab-desc {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.95;
   opacity: 0.8;
 }
 
@@ -166,34 +295,89 @@
 }
 
 .material-card {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  padding: 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(245, 158, 11, 0.15));
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.material-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.material-card:hover::before {
+  left: 100%;
 }
 
 .material-card:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(245, 158, 11, 0.3));
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
 }
 
 .material-card.selected {
-  background: linear-gradient(135deg, #3b82f6, #f59e0b);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #3b82f6 100%);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 35px rgba(245, 158, 11, 0.6), 0 0 20px rgba(59, 130, 246, 0.4);
+  transform: translateY(-3px) scale(1.03);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 8px 35px rgba(245, 158, 11, 0.6), 0 0 20px rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 40px rgba(245, 158, 11, 0.8), 0 0 30px rgba(59, 130, 246, 0.6);
+  }
 }
 
 .material-info h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: white;
+  letter-spacing: 0.5px;
 }
 
 .material-info p {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin: 0.25rem 0;
+  font-size: 0.95rem;
+  margin: 0.4rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.material-label {
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.material-value {
+  font-weight: 700;
+  color: #fbbf24;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  font-size: 1.05rem;
+}
+
+.material-card.selected .material-value {
+  color: #0f172a;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 /* Кнопки */
@@ -315,32 +499,6 @@
   gap: 0.25rem;
 }
 
-/* График */
-.graph-section {
-  margin-bottom: 2rem;
-}
-
-.graph-section h3 {
-  font-size: 1.3rem;
-  margin-bottom: 1rem;
-  color: #fbbf24;
-}
-
-.graph-container {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-  padding: 2rem;
-  min-height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.graph-placeholder {
-  text-align: center;
-  opacity: 0.7;
-}
-
 /* Экспорт */
 .export-section {
   text-align: center;
@@ -375,6 +533,16 @@
   .calculator-title {
     font-size: 2rem;
   }
+
+  .language-selector {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .lang-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
   
   .curve-tabs {
     grid-template-columns: 1fr;
@@ -406,7 +574,7 @@
 /* Новые стили для расширенной функциональности */
 
 /* Кнопки управления */
-.btn-3d, .btn-chart {
+.btn-3d {
   background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
   color: #0f172a;
   border: none;
@@ -420,12 +588,12 @@
   gap: 8px;
 }
 
-.btn-3d:hover, .btn-chart:hover {
+.btn-3d:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
 }
 
-.btn-3d.active, .btn-chart.active {
+.btn-3d.active {
   background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
   color: white;
 }
@@ -456,20 +624,6 @@
 .analysis-item .value.warning {
   color: #f59e0b;
   font-weight: 600;
-}
-
-/* Графики */
-.graph-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px 0;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.chart-canvas {
-  width: 100% !important;
-  height: 400px !important;
 }
 
 /* 3D Визуализация */
@@ -575,37 +729,8 @@
   animation: fadeInUp 0.6s ease-out;
 }
 
-.graph-section, .visualization-section {
+.visualization-section {
   animation: fadeInUp 0.8s ease-out;
-}
-
-/* График */
-.graph-section {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-}
-
-.graph-section h3 {
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.graph-container {
-  background: white;
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.graph-container canvas {
-  width: 100% !important;
-  height: 400px !important;
-  max-height: 400px;
 }
 
 /* Рекомендации */
@@ -731,10 +856,6 @@
 @media (max-width: 768px) {
   .visualization-canvas {
     height: 300px;
-  }
-
-  .chart-canvas {
-    height: 300px !important;
   }
 
   .settings-grid {

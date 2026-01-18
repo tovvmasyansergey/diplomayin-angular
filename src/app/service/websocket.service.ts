@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ChatMessage, ChatNotification } from '../models/chat-message.model';
+import { AuthService } from './auth.service';
 
 declare const SockJS: any;
 declare const Stomp: any;
@@ -14,7 +15,7 @@ export class WebSocketService {
   private messages = new BehaviorSubject<ChatMessage[]>([]);
   private newMessage = new BehaviorSubject<ChatMessage | null>(null);
 
-  constructor() { }
+  constructor(private authService: AuthService) { }
 
   connect(userId: number): void {
     console.log('🔌 Connecting to WebSocket...');
@@ -23,8 +24,14 @@ export class WebSocketService {
     console.log('🔌 Stomp available:', typeof Stomp !== 'undefined');
 
     try {
+      // Определяем URL бэкенда на основе текущего хоста
+      const hostname = window.location.hostname;
+      const backendUrl = (hostname === 'localhost' || hostname === '127.0.0.1') 
+        ? 'http://localhost:7404' 
+        : `http://${hostname}:7404`;
+      
       // Используем SockJS для совместимости с бэкендом
-      const socket = new SockJS('http://localhost:7404/ws');
+      const socket = new SockJS(`${backendUrl}/ws`);
       console.log('🔌 SockJS socket created:', socket);
       this.stompClient = Stomp.over(socket);
       console.log('🔌 Stomp client created:', this.stompClient);
@@ -32,7 +39,17 @@ export class WebSocketService {
       // Отключаем отладочные сообщения STOMP для чистоты консоли
       this.stompClient.debug = () => {}; // Отключаем дебаг логи STOMP
 
-      this.stompClient.connect({}, (frame: any) => {
+      // Получаем токен авторизации
+      const token = this.authService.getToken();
+      const headers: any = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔑 Adding authorization token to WebSocket connection');
+      } else {
+        console.warn('⚠️ No token found for WebSocket connection');
+      }
+
+      this.stompClient.connect(headers, (frame: any) => {
         console.log('✅ WebSocket connected successfully:', frame);
         this.connected.next(true);
 

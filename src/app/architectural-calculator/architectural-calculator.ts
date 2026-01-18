@@ -1,12 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalculationResult, Material, ArchitecturalStructure, StructuralAnalysis, VisualizationSettings, Recommendation } from './interfaces/architectural.interface';
 import { ArchitecturalCalculationsService } from './services/architectural-calculations.service';
 import { MaterialCalculatorService } from './services/material-calculator.service';
-import { ChartService } from './services/chart.service';
 import { RecommendationService } from './services/recommendation.service';
-import { Chart, ChartConfiguration } from 'chart.js';
+import { TranslationService, Language } from './services/translation.service';
 import * as jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -22,18 +21,11 @@ import { saveAs } from 'file-saver';
 })
 export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, OnDestroy {
   
-  @ViewChild('chartCanvas', { static: false }) chartCanvas?: ElementRef<HTMLCanvasElement>;
-  chart: Chart | null = null;
-  
   selectedCurveType: 'parabola' | 'ellipse' | 'hyperbola' = 'parabola';
   calculationResult: CalculationResult | null = null;
   structuralAnalysis: StructuralAnalysis | null = null;
   materials: Material[] = [];
   recommendations: Recommendation[] = [];
-  
-  // 2D графики
-  chartConfig: ChartConfiguration | null = null;
-  showChart = false;
   
   // Параметры для параболы
   parabolaParams = {
@@ -58,17 +50,20 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
   
   selectedMaterial: Material | null = null;
   showResults = false;
+  currentLanguage: Language = 'ru';
 
   constructor(
     private calculationsService: ArchitecturalCalculationsService,
     private materialService: MaterialCalculatorService,
-    private chartService: ChartService,
-    private recommendationService: RecommendationService
+    private recommendationService: RecommendationService,
+    public translationService: TranslationService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
     this.materials = this.materialService.getAllMaterials();
     this.selectedMaterial = this.materials[0]; // Бетон по умолчанию
+    this.currentLanguage = this.translationService.getLanguage();
   }
 
   ngAfterViewInit(): void {
@@ -76,9 +71,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
   }
 
   ngOnDestroy(): void {
-    if (this.chart) {
-      this.chart.destroy();
-    }
+    // Cleanup if needed
   }
 
   onCurveTypeChange(): void {
@@ -92,9 +85,59 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     }
   }
 
+  translate(key: string): string {
+    return this.translationService.translate(key);
+  }
+  
+  /**
+   * Конвертация рублей в драмы (примерный курс: 1 RUB = 5.5 AMD)
+   */
+  convertToDrams(rubles: number): number {
+    return Math.round(rubles * 5.5);
+  }
+  
+  /**
+   * Конвертация рублей в доллары (примерный курс: 1 USD = 100 RUB)
+   */
+  convertToDollars(rubles: number): number {
+    return Math.round((rubles / 100) * 100) / 100; // Округляем до 2 знаков после запятой
+  }
+  
+  /**
+   * Получение цены с учетом валюты
+   */
+  getPriceWithCurrency(price: number): string {
+    if (this.currentLanguage === 'hy') {
+      // Для армянского языка конвертируем в драмы
+      const drams = this.convertToDrams(price);
+      return `֏${drams.toLocaleString('hy-AM')}`;
+    } else if (this.currentLanguage === 'en') {
+      // Для английского языка конвертируем в доллары
+      const dollars = this.convertToDollars(price);
+      return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    // Для русского языка - рубли со знаком
+    return `₽${price.toLocaleString('ru-RU')}`;
+  }
+
+  setLanguage(lang: Language): void {
+    this.translationService.setLanguage(lang);
+    this.currentLanguage = lang;
+    // Принудительно обновляем представление
+    this.cdr.detectChanges();
+    // Если есть результаты, перегенерируем рекомендации с новым языком
+    if (this.showResults && this.calculationResult && this.structuralAnalysis) {
+      this.generateRecommendations();
+    }
+  }
+
+  getCurrentLanguage(): Language {
+    return this.currentLanguage;
+  }
+
   calculate(): void {
     if (!this.selectedMaterial) {
-      alert('Выберите материал!');
+      alert(this.translate('selectMaterialError'));
       return;
     }
 
@@ -130,11 +173,6 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
       
       this.showResults = true;
       
-      // Автоматически создаем 2D график с задержкой для инициализации DOM
-      setTimeout(() => {
-        this.create2DChart();
-      }, 100);
-      
       // Выполняем структурный анализ
       this.performStructuralAnalysis();
       
@@ -143,7 +181,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
       
     } catch (error) {
       console.error('Ошибка расчета:', error);
-      alert('Ошибка при расчете. Проверьте введенные параметры.');
+      alert(this.translate('calculationError'));
     }
   }
 
@@ -152,102 +190,29 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     this.structuralAnalysis = null;
     this.recommendations = [];
     this.showResults = false;
-    this.showChart = false;
-    this.chartConfig = null;
-    
-    // Уничтожаем график если есть
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
-    }
   }
 
   getCurveTypeDescription(): string {
-    switch (this.selectedCurveType) {
-      case 'parabola':
-        return 'Арки, мосты, крыши стадионов, навесы';
-      case 'ellipse':
-        return 'Купола, своды, арочные крыши, амфитеатры';
-      case 'hyperbola':
-        return 'Башни, оболочки, вантовые конструкции, воронкообразные крыши';
+    return this.translationService.getCurveTypeDescription(this.selectedCurveType);
+  }
+
+  getSeverityText(severity: string): string {
+    switch (severity) {
+      case 'critical':
+        return this.translate('critical');
+      case 'high':
+        return this.translate('high');
+      case 'medium':
+        return this.translate('medium');
+      case 'low':
+        return this.translate('low');
       default:
-        return '';
+        return severity;
     }
   }
 
-  // Новые методы для расширенной функциональности
-
-  /**
-   * Создание 2D графика
-   */
-  create2DChart(): void {
-    if (!this.calculationResult || !this.chartCanvas) {
-      console.warn('Не удалось создать график: отсутствуют необходимые данные');
-      return;
-    }
-
-    // Уничтожаем старый график если есть
-    if (this.chart) {
-      this.chart.destroy();
-    }
-
-    // Проверяем, что есть данные графика
-    if (!this.calculationResult.graphData || this.calculationResult.graphData.length === 0) {
-      console.warn('Нет данных для графика');
-      this.showChart = false;
-      return;
-    }
-
-    // Создаем конфигурацию в зависимости от типа кривой
-    switch (this.selectedCurveType) {
-      case 'parabola':
-        this.chartConfig = this.chartService.createParabolaChart(
-          this.calculationResult.graphData,
-          this.parabolaParams.span,
-          this.parabolaParams.height
-        );
-        break;
-      case 'ellipse':
-        this.chartConfig = this.chartService.createEllipseChart(
-          this.calculationResult.graphData,
-          this.ellipseParams.a,
-          this.ellipseParams.b
-        );
-        break;
-      case 'hyperbola':
-        this.chartConfig = this.chartService.createHyperbolaChart(
-          this.calculationResult.graphData,
-          this.hyperbolaParams.a,
-          this.hyperbolaParams.b
-        );
-        break;
-    }
-
-    if (this.chartConfig) {
-      // Создаем новый график Chart.js
-      const ctx = this.chartCanvas.nativeElement.getContext('2d');
-      if (ctx) {
-        this.chart = new Chart(ctx, this.chartConfig);
-        this.showChart = true;
-        console.log('График успешно создан');
-      } else {
-        console.error('Не удалось получить контекст canvas');
-      }
-    } else {
-      console.error('Не удалось создать конфигурацию графика');
-      this.showChart = false;
-    }
-  }
-
-  /**
-   * Переключение 2D графика
-   */
-  toggle2DChart(): void {
-    this.showChart = !this.showChart;
-    
-    if (this.showChart && !this.chartConfig) {
-      this.create2DChart();
-    }
+  getMaterialName(materialName: string): string {
+    return this.translationService.getMaterialName(materialName);
   }
 
   /**
@@ -315,12 +280,188 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
       };
     }
 
+    // Передаем TranslationService в RecommendationService через инжекцию
+    // Временно используем текущий подход, но обновим рекомендации после генерации
     this.recommendations = this.recommendationService.generateRecommendations(
       this.structuralAnalysis,
       this.calculationResult,
       this.selectedMaterial,
       structureParams
     );
+    
+    // Переводим заголовки рекомендаций
+    this.recommendations = this.recommendations.map(rec => ({
+      ...rec,
+      title: this.translateRecommendationTitle(rec.title),
+      description: this.translateRecommendationDescription(rec.description, rec),
+      suggestion: rec.suggestion ? this.translateRecommendationSuggestion(rec.suggestion, rec) : undefined
+    }));
+  }
+  
+  private translateRecommendationTitle(title: string): string {
+    // Если title уже является ключом перевода (начинается с 'rec.')
+    if (title.startsWith('rec.')) {
+      return this.translate(title);
+    }
+    
+    // Иначе ищем в маппинге
+    const titleMap: { [key: string]: string } = {
+      'Превышена прочность материала!': 'rec.stressExceeded',
+      'Высокий уровень напряжения': 'rec.highStress',
+      'Критический запас прочности!': 'rec.criticalSafety',
+      'Недостаточный запас прочности': 'rec.insufficientSafety',
+      'Отличный запас прочности': 'rec.goodSafety',
+      'Прогиб превышает норму': 'rec.deflectionExceeded',
+      'Недостаточная толщина': 'rec.insufficientThickness',
+      'Недостаточная толщина для большой высоты': 'rec.insufficientThicknessForHeight',
+      'Высота превышает рекомендуемую': 'rec.heightExceeded',
+      'Большое соотношение пролета к высоте': 'rec.largeSpanRatio',
+      'Высокая дуга': 'rec.highArch',
+      'Тонкая бетонная конструкция при большом пролете': 'rec.thinConcrete',
+      'Тонкая стальная конструкция': 'rec.thinSteel'
+    };
+    
+    const key = titleMap[title];
+    if (key) {
+      return this.translate(key);
+    }
+    return title;
+  }
+  
+  private translateRecommendationDescription(description: string, rec: Recommendation): string {
+    // Парсим описание и переводим его
+    if (!description) return description;
+    
+    // Извлекаем числа из описания
+    const numbers = description.match(/[\d.]+/g) || [];
+    
+    // Определяем паттерн перевода на основе содержимого
+    if (description.includes('Максимальное напряжение') || description.includes('превышает прочность материала')) {
+      // rec.maxStressExceeds
+      const maxStress = numbers[0] || '';
+      const strength = numbers[1] || '';
+      return this.translate('rec.maxStressExceeds').replace('{0}', maxStress).replace('{1}', strength);
+    } else if (description.includes('Напряжение') && description.includes('использует') && description.includes('%')) {
+      // rec.stressUsesPercent
+      const stress = numbers[0] || '';
+      const percent = numbers[1] || '';
+      return this.translate('rec.stressUsesPercent').replace('{0}', stress).replace('{1}', percent);
+    } else if (description.includes('Коэффициент запаса') && description.includes('слишком мал')) {
+      // rec.safetyFactorTooLow
+      const factor = numbers[0] || '';
+      return this.translate('rec.safetyFactorTooLow').replace('{0}', factor);
+    } else if (description.includes('Коэффициент запаса') && description.includes('ниже рекомендуемого')) {
+      // rec.safetyFactorBelowMin
+      const factor = numbers[0] || '';
+      const min = numbers[1] || '';
+      return this.translate('rec.safetyFactorBelowMin').replace('{0}', factor).replace('{1}', min);
+    } else if (description.includes('Коэффициент запаса') && description.includes('соответствует нормам')) {
+      // rec.safetyFactorMeets
+      const factor = numbers[0] || '';
+      return this.translate('rec.safetyFactorMeets').replace('{0}', factor);
+    } else if (description.includes('Прогиб') && description.includes('превышает допустимое')) {
+      // rec.deflectionExceeded
+      const deflection = numbers[0] || '';
+      const maxDeflection = numbers[1] || '';
+      const ratio = numbers[2] || '';
+      return this.translate('rec.deflectionExceeds').replace('{0}', deflection).replace('{1}', maxDeflection).replace('{2}', ratio);
+    } else if (description.includes('Толщина') && description.includes('меньше минимально допустимой')) {
+      // rec.thicknessLessThanMin
+      const thickness = numbers[0] || '';
+      const min = numbers[1] || '';
+      return this.translate('rec.thicknessLessThanMin').replace('{0}', thickness).replace('{1}', min);
+    } else if (description.includes('При высоте') && description.includes('требуется минимальная толщина')) {
+      // rec.heightRequiresThickness
+      const height = numbers[0] || '';
+      const thickness = numbers[1] || '';
+      return this.translate('rec.heightRequiresThickness').replace('{0}', height).replace('{1}', thickness);
+    } else if (description.includes('Высота конструкции') && description.includes('превышает рекомендуемый максимум')) {
+      // rec.heightExceedsMax
+      const height = numbers[0] || '';
+      const max = numbers[1] || '';
+      return this.translate('rec.heightExceedsMax').replace('{0}', height).replace('{1}', max);
+    } else if (description.includes('Соотношение пролета к высоте') && description.includes('слишком большое')) {
+      // rec.spanRatioTooLarge
+      const ratio = numbers[0] || '';
+      return this.translate('rec.spanRatioTooLarge').replace('{0}', ratio);
+    } else if (description.includes('При такой высоте') && description.includes('рекомендуется увеличить толщину')) {
+      // rec.highArchRecommendation
+      const height = numbers[0] || '';
+      return this.translate('rec.highArchRecommendation').replace('{0}', height);
+    } else if (description.includes('Для бетонной арки') && description.includes('толщина') && description.includes('может быть недостаточной')) {
+      // rec.concreteThicknessInsufficient
+      const span = numbers[0] || '';
+      const thickness = numbers[1] || '';
+      return this.translate('rec.concreteThicknessInsufficient').replace('{0}', span).replace('{1}', thickness);
+    } else if (description.includes('Стальные конструкции требуют')) {
+      // rec.steelRequiresCheck
+      return this.translate('rec.steelRequiresCheck');
+    }
+    
+    return description;
+  }
+  
+  private translateRecommendationSuggestion(suggestion: string, rec: Recommendation): string {
+    if (!suggestion) return suggestion;
+    
+    // Извлекаем числа из предложения
+    const numbers = suggestion.match(/[\d.]+/g) || [];
+    
+    // Определяем паттерн перевода
+    if (suggestion.includes('Немедленно увеличьте') && suggestion.includes('30%')) {
+      // rec.suggestion.increaseThickness30
+      const strength = numbers[numbers.length - 1] || '';
+      return this.translate('rec.suggestion.increaseThickness30').replace('{0}', strength);
+    } else if (suggestion.includes('Рекомендуется увеличить толщину на') && suggestion.includes('% для безопасности')) {
+      // rec.suggestion.increaseThicknessPercent
+      const percent = numbers[0] || '';
+      return this.translate('rec.suggestion.increaseThicknessPercent').replace('{0}', percent);
+    } else if (suggestion.includes('Увеличьте толщину конструкции минимум на 50%')) {
+      // rec.suggestion.increaseThickness50
+      return this.translate('rec.suggestion.increaseThickness50');
+    } else if (suggestion.includes('Увеличьте толщину на') && suggestion.includes('% для соответствия нормам')) {
+      // rec.suggestion.increaseThicknessForNorms
+      const percent = numbers[0] || '';
+      return this.translate('rec.suggestion.increaseThicknessForNorms').replace('{0}', percent);
+    } else if (suggestion.includes('Конструкция имеет достаточный запас прочности')) {
+      // rec.suggestion.structureHasStrength
+      return this.translate('rec.suggestion.structureHasStrength');
+    } else if (suggestion.includes('Увеличьте толщину в') && suggestion.includes('раза') && suggestion.includes('уменьшения прогиба')) {
+      // rec.suggestion.increaseThicknessTimes
+      const times = numbers[0] || '';
+      const percent = numbers[numbers.length - 1] || '';
+      return this.translate('rec.suggestion.increaseThicknessTimes').replace('{0}', times).replace('{1}', percent);
+    } else if (suggestion.includes('Увеличьте толщину минимум до') && suggestion.includes('см для обеспечения безопасности')) {
+      // rec.suggestion.increaseThicknessToMin
+      const thickness = numbers[0] || '';
+      return this.translate('rec.suggestion.increaseThicknessToMin').replace('{0}', thickness);
+    } else if (suggestion.includes('Для высоты') && suggestion.includes('м необходимо увеличить толщину до') && suggestion.includes('см и более')) {
+      // rec.suggestion.increaseThicknessForHeight
+      const height = numbers[0] || '';
+      const thickness = numbers[1] || '';
+      return this.translate('rec.suggestion.increaseThicknessForHeight').replace('{0}', height).replace('{1}', thickness);
+    } else if (suggestion.includes('Рекомендуется снизить высоту') || suggestion.includes('значительно увеличить толщину')) {
+      // rec.suggestion.reduceHeightOrIncreaseThickness
+      const thickness = numbers[0] || '';
+      return this.translate('rec.suggestion.reduceHeightOrIncreaseThickness').replace('{0}', thickness);
+    } else if (suggestion.includes('Рекомендуется увеличить высоту дуги') || suggestion.includes('добавить дополнительные опоры')) {
+      // rec.suggestion.increaseHeightOrAddSupports
+      return this.translate('rec.suggestion.increaseHeightOrAddSupports');
+    } else if (suggestion.includes('При высоте') && suggestion.includes('м рекомендуется толщина не менее')) {
+      // rec.suggestion.recommendedThicknessForHeight
+      const height = numbers[0] || '';
+      const thickness = numbers[numbers.length - 1] || '';
+      return this.translate('rec.suggestion.recommendedThicknessForHeight').replace('{0}', height).replace('{1}', thickness);
+    } else if (suggestion.includes('Рекомендуется увеличить толщину до') && suggestion.includes('см или использовать армирование')) {
+      // rec.suggestion.increaseThicknessOrReinforce
+      const thickness = numbers[0] || '';
+      return this.translate('rec.suggestion.increaseThicknessOrReinforce').replace('{0}', thickness);
+    } else if (suggestion.includes('Убедитесь, что конструкция имеет достаточное поперечное армирование')) {
+      // rec.suggestion.ensureTransverseReinforcement
+      return this.translate('rec.suggestion.ensureTransverseReinforcement');
+    }
+    
+    return suggestion;
   }
 
   /**
@@ -367,93 +508,64 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
 
     // Заголовок
     doc.setFontSize(18);
-    doc.text('Архитектурный калькулятор', pageWidth / 2, yPos, { align: 'center' });
+    doc.text(this.translate('title'), pageWidth / 2, yPos, { align: 'center' });
     yPos += 10;
 
     doc.setFontSize(12);
-    doc.text(`Тип кривой: ${this.calculationResult?.type || 'неизвестно'}`, 15, yPos);
+    const curveTypeName = this.calculationResult?.type === 'parabola' ? this.translate('parabola') :
+                          this.calculationResult?.type === 'ellipse' ? this.translate('ellipse') :
+                          this.calculationResult?.type === 'hyperbola' ? this.translate('hyperbola') :
+                          this.translate('export.unknown');
+    doc.text(`${this.translate('export.curveType')} ${curveTypeName}`, 15, yPos);
     yPos += 10;
 
     // Уравнение
-    doc.text(`Уравнение: ${this.calculationResult?.equation || 'N/A'}`, 15, yPos);
+    doc.text(`${this.translate('export.equation')} ${this.calculationResult?.equation || 'N/A'}`, 15, yPos);
     yPos += 15;
-
-    // Вставка графика
-    if (this.chartCanvas && this.chart) {
-      try {
-        const canvas = this.chartCanvas.nativeElement;
-        const chartImage = canvas.toDataURL('image/png');
-        
-        // Добавляем подзаголовок для графика
-        doc.setFontSize(12);
-        doc.text('Визуализация:', 15, yPos);
-        yPos += 10;
-
-        // Вычисляем размеры для графика
-        const imgWidth = 180;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // Проверяем, нужно ли добавить новую страницу
-        if (yPos + imgHeight > 270) {
-          doc.addPage();
-          yPos = 20;
-        }
-        
-        doc.addImage(chartImage, 'PNG', 15, yPos, imgWidth, imgHeight);
-        yPos += imgHeight + 15;
-        
-        // Проверяем, нужно ли новая страница
-        if (yPos > 270) {
-          doc.addPage();
-          yPos = 20;
-        }
-      } catch (error) {
-        console.error('Ошибка при добавлении графика в PDF:', error);
-      }
-    }
 
     // Измерения
     if (this.calculationResult?.measurements) {
       doc.setFontSize(14);
-      doc.text('Измерения:', 15, yPos);
+      doc.text(this.translate('export.measurements'), 15, yPos);
       yPos += 8;
       doc.setFontSize(11);
-      doc.text(`Площадь: ${this.calculationResult.measurements.area.toFixed(2)} м²`, 15, yPos);
+      doc.text(`${this.translate('area')} ${this.calculationResult.measurements.area.toFixed(2)} м²`, 15, yPos);
       yPos += 8;
-      doc.text(`Длина дуги: ${this.calculationResult.measurements.arcLength.toFixed(2)} м`, 15, yPos);
+      doc.text(`${this.translate('arcLength')} ${this.calculationResult.measurements.arcLength.toFixed(2)} м`, 15, yPos);
       yPos += 8;
-      doc.text(`Объем: ${this.calculationResult.measurements.volume.toFixed(2)} м³`, 15, yPos);
+      doc.text(`${this.translate('volume')} ${this.calculationResult.measurements.volume.toFixed(2)} м³`, 15, yPos);
       yPos += 15;
     }
 
     // Материалы
     if (this.calculationResult?.materialEstimate) {
       doc.setFontSize(14);
-      doc.text('Оценка материалов:', 15, yPos);
+      doc.text(this.translate('export.materialEstimate'), 15, yPos);
       yPos += 8;
       doc.setFontSize(11);
-      doc.text(`Материал: ${this.calculationResult.materialEstimate.material.name}`, 15, yPos);
+      doc.text(`${this.translate('export.material')} ${this.getMaterialName(this.calculationResult.materialEstimate.material.name)}`, 15, yPos);
       yPos += 8;
-      doc.text(`Количество: ${this.calculationResult.materialEstimate.quantity.toFixed(2)} м³`, 15, yPos);
+      doc.text(`${this.translate('export.quantity')} ${this.calculationResult.materialEstimate.quantity.toFixed(2)} м³`, 15, yPos);
       yPos += 8;
-      doc.text(`Вес: ${this.calculationResult.materialEstimate.weight.toFixed(0)} кг`, 15, yPos);
+      doc.text(`${this.translate('export.weight')} ${this.calculationResult.materialEstimate.weight.toFixed(0)} кг`, 15, yPos);
       yPos += 8;
-      doc.text(`Стоимость: ${this.calculationResult.materialEstimate.totalCost.toFixed(0)} руб`, 15, yPos);
+      const costText = this.getPriceWithCurrency(this.calculationResult.materialEstimate.totalCost);
+      doc.text(`${this.translate('export.cost')} ${costText}`, 15, yPos);
       yPos += 15;
     }
 
     // Структурный анализ
     if (this.structuralAnalysis) {
       const tableData = [
-        ['Макс. напряжение', `${this.structuralAnalysis.maxStress.toFixed(2)} МПа`],
-        ['Коэф. безопасности', this.structuralAnalysis.safetyFactor.toFixed(2)],
-        ['Прогиб', `${this.structuralAnalysis.deflection.toFixed(2)} мм`],
-        ['Критическая нагрузка', `${this.structuralAnalysis.bucklingLoad.toFixed(0)} Н`],
-        ['Собственная частота', `${this.structuralAnalysis.naturalFrequency.toFixed(2)} Гц`]
+        [this.translate('maxStress'), `${this.structuralAnalysis.maxStress.toFixed(2)} МПа`],
+        [this.translate('safetyFactor'), this.structuralAnalysis.safetyFactor.toFixed(2)],
+        [this.translate('deflection'), `${this.structuralAnalysis.deflection.toFixed(2)} мм`],
+        [this.translate('bucklingLoad'), `${this.structuralAnalysis.bucklingLoad.toFixed(0)} Н`],
+        [this.translate('naturalFrequency'), `${this.structuralAnalysis.naturalFrequency.toFixed(2)} Гц`]
       ];
 
       (doc as any).autoTable({
-        head: [['Параметр', 'Значение']],
+        head: [[this.translate('export.parameter'), this.translate('export.value')]],
         body: tableData,
         startY: yPos,
         styles: { fontSize: 9 },
@@ -470,77 +582,53 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     const wb = XLSX.utils.book_new();
 
     // Лист с основными данными
+    const curveTypeName = this.calculationResult?.type === 'parabola' ? this.translate('parabola') :
+                          this.calculationResult?.type === 'ellipse' ? this.translate('ellipse') :
+                          this.calculationResult?.type === 'hyperbola' ? this.translate('hyperbola') :
+                          this.translate('export.unknown');
     const mainData = [
-      ['Архитектурный калькулятор'],
-      ['Тип кривой', this.calculationResult?.type || 'N/A'],
-      ['Уравнение', this.calculationResult?.equation || 'N/A'],
+      [this.translate('title')],
+      [this.translate('export.curveType'), curveTypeName],
+      [this.translate('export.equation'), this.calculationResult?.equation || 'N/A'],
       [],
-      ['Измерения'],
-      ['Площадь (м²)', this.calculationResult?.measurements.area || 0],
-      ['Длина дуги (м)', this.calculationResult?.measurements.arcLength || 0],
-      ['Объем (м³)', this.calculationResult?.measurements.volume || 0],
+      [this.translate('export.measurements')],
+      [`${this.translate('area')} (м²)`, this.calculationResult?.measurements.area || 0],
+      [`${this.translate('arcLength')} (м)`, this.calculationResult?.measurements.arcLength || 0],
+      [`${this.translate('volume')} (м³)`, this.calculationResult?.measurements.volume || 0],
       [],
-      ['Материалы'],
-      ['Материал', this.calculationResult?.materialEstimate.material.name || 'N/A'],
-      ['Количество (м³)', this.calculationResult?.materialEstimate.quantity || 0],
-      ['Вес (кг)', this.calculationResult?.materialEstimate.weight || 0],
-      ['Стоимость (руб)', this.calculationResult?.materialEstimate.totalCost || 0]
+      [this.translate('materials')],
+      [this.translate('export.material'), this.getMaterialName(this.calculationResult?.materialEstimate?.material?.name || '') || 'N/A'],
+      [`${this.translate('export.quantity')} (м³)`, this.calculationResult?.materialEstimate.quantity || 0],
+      [`${this.translate('export.weight')} (кг)`, this.calculationResult?.materialEstimate.weight || 0],
+      [`${this.translate('export.cost')} (${this.translate('currency')})`, 
+        this.currentLanguage === 'hy' ? this.convertToDrams(this.calculationResult?.materialEstimate.totalCost || 0) :
+        this.currentLanguage === 'en' ? this.convertToDollars(this.calculationResult?.materialEstimate.totalCost || 0) :
+        (this.calculationResult?.materialEstimate.totalCost || 0)]
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(mainData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Основные данные');
-
-    // Лист с данными для графика
-    if (this.calculationResult?.graphData && this.calculationResult.graphData.length > 0) {
-      const chartData = [
-        ['X координата (м)', 'Y координата (м)']
-      ];
-      
-      this.calculationResult.graphData.forEach((point: any) => {
-        chartData.push([
-          typeof point.x === 'number' ? point.x : point[0],
-          typeof point.y === 'number' ? point.y : point[1]
-        ]);
-      });
-
-      const wsChart = XLSX.utils.aoa_to_sheet(chartData);
-      XLSX.utils.book_append_sheet(wb, wsChart, 'График');
-
-      // Добавляем инструкцию для создания графика в Excel
-      const chartInstructions = [
-        ['Инструкция по созданию графика в Excel:'],
-        [],
-        ['1. Перейдите на лист "График"'],
-        ['2. Выберите столбцы A и B (данные X и Y)'],
-        ['3. Вставьте → Диаграмма → Точечная диаграмма (точечная с линиями)'],
-        ['4. Настройте ось и название диаграммы'],
-        [],
-        ['Примечание: X - горизонтальная координата в метрах'],
-        ['Примечание: Y - вертикальная координата в метрах']
-      ];
-      const wsInstructions = XLSX.utils.aoa_to_sheet(chartInstructions);
-      XLSX.utils.book_append_sheet(wb, wsInstructions, 'Инструкция');
-    }
+    XLSX.utils.book_append_sheet(wb, ws, this.translate('export.measurements'));
 
     // Лист со структурным анализом
     if (this.structuralAnalysis) {
       const analysisData = [
-        ['Структурный анализ'],
-        ['Макс. напряжение (МПа)', this.structuralAnalysis.maxStress],
-        ['Коэф. безопасности', this.structuralAnalysis.safetyFactor],
-        ['Прогиб (мм)', this.structuralAnalysis.deflection],
-        ['Критическая нагрузка (Н)', this.structuralAnalysis.bucklingLoad],
-        ['Собственная частота (Гц)', this.structuralAnalysis.naturalFrequency]
+        [this.translate('export.structuralAnalysis')],
+        [`${this.translate('maxStress')} (МПа)`, this.structuralAnalysis.maxStress],
+        [this.translate('safetyFactor'), this.structuralAnalysis.safetyFactor],
+        [`${this.translate('deflection')} (мм)`, this.structuralAnalysis.deflection],
+        [`${this.translate('bucklingLoad')} (Н)`, this.structuralAnalysis.bucklingLoad],
+        [`${this.translate('naturalFrequency')} (Гц)`, this.structuralAnalysis.naturalFrequency]
       ];
       const wsAnalysis = XLSX.utils.aoa_to_sheet(analysisData);
-      XLSX.utils.book_append_sheet(wb, wsAnalysis, 'Структурный анализ');
+      XLSX.utils.book_append_sheet(wb, wsAnalysis, this.translate('export.structuralAnalysis'));
     }
 
     // Лист с рекомендациями
     if (this.recommendations && this.recommendations.length > 0) {
       const recommendationsData = [
-        ['Рекомендации'],
-        ['Тип', 'Заголовок', 'Описание', 'Текущее', 'Рекомендуемое', 'Предложение']
+        [this.translate('export.recommendations')],
+        [this.translate('export.type'), this.translate('export.title'), this.translate('export.description'), 
+         this.translate('export.current'), this.translate('export.recommended'), this.translate('recommendation')]
       ];
       
       this.recommendations.forEach(rec => {
@@ -555,7 +643,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
       });
 
       const wsRec = XLSX.utils.aoa_to_sheet(recommendationsData);
-      XLSX.utils.book_append_sheet(wb, wsRec, 'Рекомендации');
+      XLSX.utils.book_append_sheet(wb, wsRec, this.translate('export.recommendations'));
     }
 
     // Сохранение
@@ -571,16 +659,20 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     // Заголовок
     children.push(
       new Paragraph({
-        text: 'Архитектурный калькулятор',
+        text: this.translate('title'),
         heading: HeadingLevel.TITLE,
         alignment: AlignmentType.CENTER
       })
     );
 
     // Тип кривой
+    const curveTypeName = this.calculationResult.type === 'parabola' ? this.translate('parabola') :
+                          this.calculationResult.type === 'ellipse' ? this.translate('ellipse') :
+                          this.calculationResult.type === 'hyperbola' ? this.translate('hyperbola') :
+                          this.translate('export.unknown');
     children.push(
       new Paragraph({
-        text: `Тип кривой: ${this.calculationResult.type || 'неизвестно'}`,
+        text: `${this.translate('export.curveType')} ${curveTypeName}`,
         heading: HeadingLevel.HEADING_1
       })
     );
@@ -588,57 +680,16 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     // Уравнение
     children.push(
       new Paragraph({
-        text: `Уравнение: ${this.calculationResult.equation || 'N/A'}`,
+        text: `${this.translate('export.equation')} ${this.calculationResult.equation || 'N/A'}`,
         spacing: { after: 200 }
       })
     );
-
-    // Вставка графика
-    if (this.chartCanvas && this.chart) {
-      try {
-        const canvas = this.chartCanvas.nativeElement;
-        const chartImage = canvas.toDataURL('image/png');
-        const base64Image = chartImage.split(',')[1];
-        
-        // Конвертируем base64 в Uint8Array для браузера
-        const binaryString = atob(base64Image);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        children.push(
-          new Paragraph({
-            text: 'Визуализация:',
-            heading: HeadingLevel.HEADING_2
-          })
-        );
-
-        children.push(
-          new Paragraph({
-            children: [
-              new ImageRun({
-                data: bytes,
-                type: 'png',
-                transformation: {
-                  width: 500,
-                  height: 300
-                }
-              })
-            ],
-            alignment: AlignmentType.CENTER
-          })
-        );
-      } catch (error) {
-        console.error('Ошибка при добавлении графика в Word:', error);
-      }
-    }
 
     // Измерения
     if (this.calculationResult.measurements) {
       children.push(
         new Paragraph({
-          text: 'Измерения',
+          text: this.translate('export.measurements'),
           heading: HeadingLevel.HEADING_2
         })
       );
@@ -648,11 +699,11 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph('Параметр')],
+                children: [new Paragraph(this.translate('export.parameter'))],
                 width: { size: 50, type: WidthType.PERCENTAGE }
               }),
               new TableCell({
-                children: [new Paragraph('Значение')],
+                children: [new Paragraph(this.translate('export.value'))],
                 width: { size: 50, type: WidthType.PERCENTAGE }
               })
             ]
@@ -660,7 +711,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph('Площадь')]
+                children: [new Paragraph(this.translate('area'))]
               }),
               new TableCell({
                 children: [new Paragraph(`${this.calculationResult.measurements.area.toFixed(2)} м²`)]
@@ -670,7 +721,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph('Длина дуги')]
+                children: [new Paragraph(this.translate('arcLength'))]
               }),
               new TableCell({
                 children: [new Paragraph(`${this.calculationResult.measurements.arcLength.toFixed(2)} м`)]
@@ -680,7 +731,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph('Объем')]
+                children: [new Paragraph(this.translate('volume'))]
               }),
               new TableCell({
                 children: [new Paragraph(`${this.calculationResult.measurements.volume.toFixed(2)} м³`)]
@@ -697,7 +748,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     if (this.calculationResult.materialEstimate) {
       children.push(
         new Paragraph({
-          text: 'Оценка материалов',
+          text: this.translate('export.materialEstimate'),
           heading: HeadingLevel.HEADING_2
         })
       );
@@ -706,32 +757,32 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
         rows: [
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Характеристика')] }),
-              new TableCell({ children: [new Paragraph('Значение')] })
+              new TableCell({ children: [new Paragraph(this.translate('export.parameter'))] }),
+              new TableCell({ children: [new Paragraph(this.translate('export.value'))] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Материал')] }),
-              new TableCell({ children: [new Paragraph(this.calculationResult.materialEstimate.material.name)] })
+              new TableCell({ children: [new Paragraph(this.translate('export.material'))] }),
+              new TableCell({ children: [new Paragraph(this.getMaterialName(this.calculationResult.materialEstimate.material.name))] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Количество')] }),
+              new TableCell({ children: [new Paragraph(this.translate('export.quantity'))] }),
               new TableCell({ children: [new Paragraph(`${this.calculationResult.materialEstimate.quantity.toFixed(2)} м³`)] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Вес')] }),
+              new TableCell({ children: [new Paragraph(this.translate('export.weight'))] }),
               new TableCell({ children: [new Paragraph(`${this.calculationResult.materialEstimate.weight.toFixed(0)} кг`)] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Стоимость')] }),
-              new TableCell({ children: [new Paragraph(`${this.calculationResult.materialEstimate.totalCost.toFixed(0)} руб`)] })
+              new TableCell({ children: [new Paragraph(this.translate('export.cost'))] }),
+              new TableCell({ children: [new Paragraph(this.getPriceWithCurrency(this.calculationResult.materialEstimate.totalCost))] })
             ]
           })
         ]
@@ -744,7 +795,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     if (this.structuralAnalysis) {
       children.push(
         new Paragraph({
-          text: 'Структурный анализ',
+          text: this.translate('export.structuralAnalysis'),
           heading: HeadingLevel.HEADING_2
         })
       );
@@ -753,37 +804,37 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
         rows: [
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Параметр')] }),
-              new TableCell({ children: [new Paragraph('Значение')] })
+              new TableCell({ children: [new Paragraph(this.translate('export.parameter'))] }),
+              new TableCell({ children: [new Paragraph(this.translate('export.value'))] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Макс. напряжение')] }),
+              new TableCell({ children: [new Paragraph(this.translate('maxStress'))] }),
               new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.maxStress.toFixed(2)} МПа`)] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Коэф. безопасности')] }),
+              new TableCell({ children: [new Paragraph(this.translate('safetyFactor'))] }),
               new TableCell({ children: [new Paragraph(this.structuralAnalysis.safetyFactor.toFixed(2))] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Прогиб')] }),
+              new TableCell({ children: [new Paragraph(this.translate('deflection'))] }),
               new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.deflection.toFixed(2)} мм`)] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Критическая нагрузка')] }),
+              new TableCell({ children: [new Paragraph(this.translate('bucklingLoad'))] }),
               new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.bucklingLoad.toFixed(0)} Н`)] })
             ]
           }),
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph('Собственная частота')] }),
+              new TableCell({ children: [new Paragraph(this.translate('naturalFrequency'))] }),
               new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.naturalFrequency.toFixed(2)} Гц`)] })
             ]
           })
@@ -797,7 +848,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     if (this.recommendations && this.recommendations.length > 0) {
       children.push(
         new Paragraph({
-          text: 'Рекомендации',
+          text: this.translate('export.recommendations'),
           heading: HeadingLevel.HEADING_2
         })
       );
@@ -805,11 +856,11 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
       const recRows: any[] = [
         new TableRow({
           children: [
-            new TableCell({ children: [new Paragraph('Тип')] }),
-            new TableCell({ children: [new Paragraph('Заголовок')] }),
-            new TableCell({ children: [new Paragraph('Описание')] }),
-            new TableCell({ children: [new Paragraph('Текущее')] }),
-            new TableCell({ children: [new Paragraph('Рекомендуемое')] })
+            new TableCell({ children: [new Paragraph(this.translate('export.type'))] }),
+            new TableCell({ children: [new Paragraph(this.translate('export.title'))] }),
+            new TableCell({ children: [new Paragraph(this.translate('export.description'))] }),
+            new TableCell({ children: [new Paragraph(this.translate('export.current'))] }),
+            new TableCell({ children: [new Paragraph(this.translate('export.recommended'))] })
           ]
         })
       ];

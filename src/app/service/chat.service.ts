@@ -18,12 +18,18 @@ export interface PaginatedResponse<T> {
   providedIn: 'root'
 })
 export class ChatService {
-  private apiUrl = 'http://localhost:7404';
+  private apiUrl: string;
 
   constructor(
     private http: HttpClient,
     private authService: AuthService
-  ) { }
+  ) {
+    // Определяем URL бэкенда на основе тcекущего хоста
+    const hostname = window.location.hostname;
+    this.apiUrl = (hostname === 'localhost' || hostname === '127.0.0.1')
+      ? 'http://localhost:7404'
+      : `http://${hostname}:7404`;
+  }
 
   /**
    * Получить сообщения между двумя пользователями с пагинацией
@@ -32,7 +38,7 @@ export class ChatService {
     const params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
-    
+
     return this.http.get<PaginatedResponse<ChatMessage>>(`${this.apiUrl}/messages/${senderId}/${recipientId}/paginated`, {
       headers: this.getHeaders(),
       params: params

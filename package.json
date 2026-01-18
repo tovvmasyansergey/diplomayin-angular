@@ -4,6 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:network": "ng serve --host 0.0.0.0 --port 4200",
+    "start:ip": "ng serve --host 0.0.0.0 --port 4200",
+    "start:https": "ng serve --ssl --ssl-cert ssl/server.crt --ssl-key ssl/server.key --host 0.0.0.0 --port 4200",
+    "create-cert": "node create-cert.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -29,12 +33,10 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@types/three": "^0.180.0",
-    "chart.js": "^4.5.1",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
-    "ng2-charts": "^8.0.0",
     "rxjs": "~7.8.0",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",

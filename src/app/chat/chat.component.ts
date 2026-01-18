@@ -9,7 +9,15 @@ import { ChatService, PaginatedResponse } from '../service/chat.service';
 import { UserService } from '../service/user.service';
 import { AuthService } from '../service/auth.service';
 
-const BACKEND_BASE_URL = 'http://localhost:7404';
+// Функция для определения URL бэкенда
+function getBackendBaseUrl(): string {
+  const hostname = window.location.hostname;
+  return (hostname === 'localhost' || hostname === '127.0.0.1') 
+    ? 'http://localhost:7404' 
+    : `http://${hostname}:7404`;
+}
+
+const BACKEND_BASE_URL = getBackendBaseUrl();
 
 @Component({
   selector: 'app-chat',
@@ -79,7 +87,18 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (!this.isMobile) {
         this.showChatOnMobile = false;
       }
+      // На мобильных устройствах корректируем высоту при открытии/закрытии клавиатуры
+      if (this.isMobile) {
+        this.adjustViewportForKeyboard();
+      }
     });
+
+    // Обработка изменения размера viewport (для мобильных устройств)
+    if (this.isMobile) {
+      window.visualViewport?.addEventListener('resize', () => {
+        this.adjustViewportForKeyboard();
+      });
+    }
 
     // Подключаемся к WebSocket с ID пользователя
     this.webSocketService.connect(this.currentUser.id);
@@ -293,8 +312,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.hasMoreMessages = true;
     this.isLoadingMessages = true;
 
-    // Сначала пытаемся загрузить сохраненные сообщения (включая новые из WebSocket)
-    this.loadSavedMessages();
+    // Загружаем сохраненные сообщения (включая новые из WebSocket) без прокрутки
+    const savedMessages = this.loadSavedMessagesSync();
 
     try {
       console.log('📋 Loading chat history between:', this.currentUser.id, 'and', this.selectedUserId);
@@ -315,7 +334,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.hasMoreMessages = !response.last;
           this.totalMessages = response.totalElements;
 
-          // Сортируем сообщения по времени (старые сверху, новые снизу)
+          // Сортируем сообщения из API по времени (старые сверху, новые снизу)
           const sortedApiMessages = response.content.sort((a, b) => {
             const dateA = new Date(a.timestamp).getTime();
             const dateB = new Date(b.timestamp).getTime();
@@ -323,31 +342,34 @@ export class ChatComponent implements OnInit, OnDestroy {
           });
 
           // Объединяем сообщения из API с сохраненными сообщениями (из WebSocket)
-          const savedMessages = this.messages || [];
-          const allMessagesMap = new Map<number, ChatMessage>();
+          const allMessagesMap = new Map<number | string, ChatMessage>();
 
-          // Добавляем сообщения из API
+          // Сначала добавляем сообщения из API
           sortedApiMessages.forEach(msg => {
             if (msg.id) {
               allMessagesMap.set(msg.id, msg);
             }
           });
 
-          // Добавляем сохраненные сообщения (которые могут быть новее)
+          // Затем добавляем сохраненные сообщения (которые могут быть новее и еще не в API)
           savedMessages.forEach(msg => {
-            if (msg.id && !allMessagesMap.has(msg.id)) {
-              allMessagesMap.set(msg.id, msg);
-            } else if (!msg.id) {
-              // Сообщения без ID (локальные) добавляем тоже
-              allMessagesMap.set(Date.now() + Math.random(), msg);
+            if (msg.id) {
+              // Если сообщение уже есть в API, используем версию из API (более актуальную)
+              if (!allMessagesMap.has(msg.id)) {
+                allMessagesMap.set(msg.id, msg);
+              }
+            } else {
+              // Сообщения без ID (локальные) добавляем с уникальным ключом
+              const uniqueKey = `local_${new Date(msg.timestamp).getTime()}_${Math.random()}`;
+              allMessagesMap.set(uniqueKey, msg);
             }
           });
 
-          // Преобразуем Map обратно в массив и сортируем
+          // Преобразуем Map обратно в массив и сортируем по времени (старые сверху, новые снизу)
           const mergedMessages = Array.from(allMessagesMap.values()).sort((a, b) => {
             const dateA = new Date(a.timestamp).getTime();
             const dateB = new Date(b.timestamp).getTime();
-            return dateA - dateB;
+            return dateA - dateB; // Старые сообщения сверху, новые снизу
           });
 
           this.messages = mergedMessages;
@@ -356,22 +378,34 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.isLoadingMessages = false;
 
           console.log('📋 Messages assigned to this.messages:', this.messages.length);
-          console.log('📋 First few messages in this.messages:', this.messages.slice(0, 3));
+          console.log('📋 First message timestamp:', this.messages[0]?.timestamp);
+          console.log('📋 Last message timestamp:', this.messages[this.messages.length - 1]?.timestamp);
 
-          // Прокручиваем вниз к последнему сообщению
-          this.scrollToBottom();
+          // Прокручиваем вниз к последнему сообщению после обновления DOM
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 100);
         },
         error: (error) => {
           console.error('❌ Error loading chat history:', error);
-          // Если API не работает, создаем пустую историю
-          this.messages = [];
-          this.webSocketService.setMessages([]);
+          // Если API не работает, используем сохраненные сообщения
+          this.messages = savedMessages;
+          this.webSocketService.setMessages(savedMessages);
           this.isLoadingMessages = false;
+          // Прокручиваем вниз
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 100);
         }
       });
     } catch (error) {
       console.error('❌ Error loading chat history:', error);
+      this.messages = savedMessages;
+      this.webSocketService.setMessages(savedMessages);
       this.isLoadingMessages = false;
+      setTimeout(() => {
+        this.scrollToBottom();
+      }, 100);
     }
   }
 
@@ -460,6 +494,17 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private loadSavedMessages(): void {
+    const messages = this.loadSavedMessagesSync();
+    this.messages = messages;
+    this.webSocketService.setMessages(messages);
+    console.log('💾 Loaded saved messages:', messages.length);
+    // Прокручиваем к последнему сообщению
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 100);
+  }
+
+  private loadSavedMessagesSync(): ChatMessage[] {
     if (this.selectedUserId && this.currentUser) {
       const key = `chat_${this.currentUser.id}_${this.selectedUserId}`;
       const saved = localStorage.getItem(key);
@@ -474,17 +519,14 @@ export class ChatComponent implements OnInit, OnDestroy {
             return dateA - dateB; // Старые сообщения сверху, новые снизу
           });
 
-          this.messages = sortedMessages;
-          this.webSocketService.setMessages(sortedMessages);
-          console.log('💾 Loaded saved messages:', sortedMessages.length);
-
-          // Прокручиваем к последнему сообщению
-          this.scrollToBottom();
+          return sortedMessages;
         } catch (error) {
           console.error('❌ Error loading saved messages:', error);
+          return [];
         }
       }
     }
+    return [];
   }
 
   /**
@@ -649,13 +691,27 @@ export class ChatComponent implements OnInit, OnDestroy {
    * Улучшенный метод прокрутки к низу
    */
   scrollToBottom(): void {
-    setTimeout(() => {
+    // Используем несколько попыток для надежной прокрутки
+    const attemptScroll = (attempts: number = 0) => {
       const chatMessages = document.getElementById('chat-messages');
       if (chatMessages) {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        console.log('📜 Scrolled to bottom, scrollTop:', chatMessages.scrollTop, 'scrollHeight:', chatMessages.scrollHeight);
+        const targetScroll = chatMessages.scrollHeight;
+        chatMessages.scrollTop = targetScroll;
+        
+        // Проверяем, что прокрутка действительно произошла
+        if (chatMessages.scrollTop < targetScroll - 10 && attempts < 5) {
+          // Если прокрутка не произошла, пробуем еще раз
+          setTimeout(() => attemptScroll(attempts + 1), 50);
+        } else {
+          console.log('📜 Scrolled to bottom, scrollTop:', chatMessages.scrollTop, 'scrollHeight:', chatMessages.scrollHeight);
+        }
+      } else if (attempts < 10) {
+        // Если элемент еще не готов, пробуем еще раз
+        setTimeout(() => attemptScroll(attempts + 1), 50);
       }
-    }, 200); // Увеличиваем задержку для более надежной работы
+    };
+    
+    setTimeout(() => attemptScroll(), 100);
   }
 
   /**
@@ -774,6 +830,61 @@ export class ChatComponent implements OnInit, OnDestroy {
     // Обычный Enter создает новую строку
     else if (event.key === 'Enter' && !event.shiftKey) {
       // Позволяем браузеру обработать Enter для создания новой строки
+    }
+  }
+
+  /**
+   * Обработка фокуса на поле ввода (для мобильных устройств)
+   */
+  onInputFocus(event: Event): void {
+    // На мобильных устройствах прокручиваем к полю ввода при фокусе
+    if (this.isMobile) {
+      setTimeout(() => {
+        const textarea = event.target as HTMLElement;
+        if (textarea) {
+          textarea.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+          // Дополнительно прокручиваем контейнер сообщений
+          const messagesContainer = document.getElementById('chat-messages');
+          if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+        }
+      }, 300); // Небольшая задержка для открытия клавиатуры
+    }
+  }
+
+  /**
+   * Обработка потери фокуса на поле ввода
+   */
+  onInputBlur(event: Event): void {
+    // При потере фокуса можно выполнить дополнительные действия
+  }
+
+  /**
+   * Корректировка viewport при открытии/закрытии клавиатуры на мобильных
+   */
+  adjustViewportForKeyboard(): void {
+    if (!this.isMobile) return;
+
+    const viewport = window.visualViewport;
+    if (viewport) {
+      const chatContainer = document.querySelector('.chat-container') as HTMLElement;
+      const chatPanel = document.querySelector('.chat-panel') as HTMLElement;
+      
+      if (chatContainer && chatPanel) {
+        // Устанавливаем высоту контейнера на основе видимого viewport
+        const height = viewport.height;
+        chatContainer.style.height = `${height}px`;
+        chatPanel.style.height = `${height}px`;
+        
+        // Прокручиваем к последнему сообщению
+        setTimeout(() => {
+          const messagesContainer = document.getElementById('chat-messages');
+          if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+        }, 100);
+      }
     }
   }
 }

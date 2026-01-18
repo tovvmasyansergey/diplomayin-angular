@@ -57,6 +57,8 @@ export class AllUsersComponent implements OnInit {
   deletingUser: User | null = null;
   isDeleting: boolean = false;
 
+  currentUser: any = null;
+
   constructor(
     private router: Router,
     private userService: UserService,
@@ -64,6 +66,7 @@ export class AllUsersComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.currentUser = this.authService.getCurrentUser();
     this.loadUsers();
   }
 
@@ -114,11 +117,11 @@ export class AllUsersComponent implements OnInit {
   startChat(user: User): void {
     console.log('Starting chat with user:', user);
     // Переходим к чату с выбранным пользователем
-    this.router.navigate(['/chat'], { 
-      queryParams: { 
-        userId: user.id, 
-        userName: `${user.firstname} ${user.lastname}` 
-      } 
+    this.router.navigate(['/chat'], {
+      queryParams: {
+        userId: user.id,
+        userName: `${user.firstname} ${user.lastname}`
+      }
     });
   }
 
@@ -134,13 +137,19 @@ export class AllUsersComponent implements OnInit {
       return profilePicture;
     }
 
+    // Определяем URL бэкенда на основе текущего хоста
+    const hostname = window.location.hostname;
+    const backendUrl = (hostname === 'localhost' || hostname === '127.0.0.1') 
+      ? 'http://localhost:7404' 
+      : `http://${hostname}:7404`;
+
     // Если URL относительный (начинается с /), добавляем базовый URL бэкенда
     if (profilePicture.startsWith('/')) {
-      return 'http://localhost:7404' + profilePicture;
+      return backendUrl + profilePicture;
     }
 
     // Если URL не начинается с /, добавляем базовый URL и /
-    return 'http://localhost:7404/' + profilePicture;
+    return backendUrl + '/' + profilePicture;
   }
 
   // Pagination methods
@@ -201,22 +210,14 @@ export class AllUsersComponent implements OnInit {
     alert('Starting chat with admin...');
   }
 
-  startAIChat(): void {
-    this.closeChatModal();
-    // TODO: Implement AI chat functionality
-    console.log('Starting AI chat...');
-    alert('Starting AI Assistant chat...');
-  }
-
-  startGPTChat(): void {
-    this.closeChatModal();
-    // TODO: Implement GPT chat functionality
-    console.log('Starting GPT chat...');
-    alert('Starting GPT chat...');
-  }
-
   // Edit user methods
   editUser(user: User): void {
+    // Проверка прав доступа перед редактированием
+    if (!this.canEditUser(user)) {
+      alert('You do not have permission to edit this user');
+      return;
+    }
+
     this.editingUser = { ...user };
     this.selectedEditFile = null;
     this.editImagePreview = null;
@@ -278,6 +279,13 @@ export class AllUsersComponent implements OnInit {
   saveUser(): void {
     if (!this.editingUser) return;
 
+    // Дополнительная проверка прав доступа перед сохранением
+    if (!this.canEditUser(this.editingUser)) {
+      alert('You do not have permission to edit this user');
+      this.closeEditModal();
+      return;
+    }
+
     this.isSaving = true;
     const formData = new FormData();
 
@@ -302,7 +310,14 @@ export class AllUsersComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating user:', error);
-        alert('Failed to update user');
+        // Показываем более информативное сообщение об ошибке
+        if (error.status === 403) {
+          alert('You do not have permission to edit this user');
+        } else if (error.status === 401) {
+          alert('Please log in to continue');
+        } else {
+          alert('Failed to update user: ' + (error.error || error.message || 'Unknown error'));
+        }
         this.isSaving = false;
       },
       complete: () => {
@@ -313,6 +328,12 @@ export class AllUsersComponent implements OnInit {
 
   // Delete user methods
   deleteUser(user: User): void {
+    // Проверка прав доступа перед удалением
+    if (!this.canDeleteUser(user)) {
+      alert('Only administrators can delete users');
+      return;
+    }
+
     this.deletingUser = user;
     this.showDeleteModal = true;
   }
@@ -325,6 +346,13 @@ export class AllUsersComponent implements OnInit {
   confirmDelete(): void {
     if (!this.deletingUser) return;
 
+    // Дополнительная проверка прав доступа перед удалением
+    if (!this.canDeleteUser(this.deletingUser)) {
+      alert('Only administrators can delete users');
+      this.closeDeleteModal();
+      return;
+    }
+
     this.isDeleting = true;
     this.authService.deleteUser(this.deletingUser.id).subscribe({
       next: () => {
@@ -334,13 +362,38 @@ export class AllUsersComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error deleting user:', error);
-        alert('Failed to delete user');
+        // Показываем более информативное сообщение об ошибке
+        if (error.status === 403) {
+          alert('Only administrators can delete users');
+        } else if (error.status === 401) {
+          alert('Please log in to continue');
+        } else {
+          alert('Failed to delete user: ' + (error.error || error.message || 'Unknown error'));
+        }
         this.isDeleting = false;
       },
       complete: () => {
         this.isDeleting = false;
       }
     });
+  }
+
+  // Проверка прав доступа
+  canEditUser(user: User): boolean {
+    if (!this.currentUser) return false;
+    // Пользователь может редактировать только себя (админ не может редактировать других)
+    return this.currentUser.id === user.id;
+  }
+
+  canDeleteUser(user: User): boolean {
+    if (!this.currentUser) return false;
+    // Админ может удалять всех, пользователь может удалить только себя
+    return this.isAdmin() || this.currentUser.id === user.id;
+  }
+
+  isAdmin(): boolean {
+    if (!this.currentUser || !this.currentUser.role) return false;
+    return this.currentUser.role === 'ADMIN';
   }
 
   protected readonly Math = Math;

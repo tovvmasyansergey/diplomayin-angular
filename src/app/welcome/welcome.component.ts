@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../service/auth.service';
@@ -10,11 +10,38 @@ import { AuthService } from '../service/auth.service';
   templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.css'
 })
-export class WelcomeComponent {
+export class WelcomeComponent implements OnInit {
+  wifiUrl: string = 'http://192.168.0.208:4200';
+  qrCodeImageUrl: string = '';
+
   constructor(
     private router: Router,
     public authService: AuthService
   ) {}
+
+  ngOnInit(): void {
+    // Генерируем QR-код для Wi-Fi доступа
+    this.generateQRCode();
+  }
+
+  generateQRCode(): void {
+    // Используем внешний API для генерации QR-кода
+    this.qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(this.wifiUrl)}`;
+  }
+
+  refreshQRCode(): void {
+    this.generateQRCode();
+  }
+
+  onQrCodeError(event: any): void {
+    console.error('QR Code image failed to load, trying alternative source:', event);
+    // Попробуем альтернативный способ
+    this.qrCodeImageUrl = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${encodeURIComponent(this.wifiUrl)}`;
+  }
+
+  onQrCodeLoad(): void {
+    console.log('QR Code image loaded successfully');
+  }
 
   get isLoggedIn(): boolean {
     const loggedIn = this.authService.isLoggedIn();

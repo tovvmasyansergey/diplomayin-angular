@@ -135,7 +135,7 @@
   display: inline-block;
   opacity: 0;
   transform: translateY(50px) scale(0.5);
-  animation: letterAppear 0.6s ease-out forwards, colorWave 4s ease-in-out infinite;
+  animation: letterAppear 1.2s ease-out forwards, colorWave 8s ease-in-out infinite;
   background: linear-gradient(90deg, #3b82f6 0%, #1e40af 20%, #f59e0b 40%, #fbbf24 60%, #fcd34d 80%, #3b82f6 100%);
   background-clip: text;
   -webkit-background-clip: text;
@@ -144,33 +144,33 @@
 }
 
 /* Задержки анимации для букв в слове "Welcome" */
-.word:nth-child(1) .letter:nth-child(1) { animation-delay: 0.1s, 0.7s; }
-.word:nth-child(1) .letter:nth-child(2) { animation-delay: 0.2s, 0.8s; }
-.word:nth-child(1) .letter:nth-child(3) { animation-delay: 0.3s, 0.9s; }
-.word:nth-child(1) .letter:nth-child(4) { animation-delay: 0.4s, 1.0s; }
-.word:nth-child(1) .letter:nth-child(5) { animation-delay: 0.5s, 1.1s; }
-.word:nth-child(1) .letter:nth-child(6) { animation-delay: 0.6s, 1.2s; }
-.word:nth-child(1) .letter:nth-child(7) { animation-delay: 0.7s, 1.3s; }
+.word:nth-child(1) .letter:nth-child(1) { animation-delay: 0.2s, 1.4s; }
+.word:nth-child(1) .letter:nth-child(2) { animation-delay: 0.4s, 1.6s; }
+.word:nth-child(1) .letter:nth-child(3) { animation-delay: 0.6s, 1.8s; }
+.word:nth-child(1) .letter:nth-child(4) { animation-delay: 0.8s, 2.0s; }
+.word:nth-child(1) .letter:nth-child(5) { animation-delay: 1.0s, 2.2s; }
+.word:nth-child(1) .letter:nth-child(6) { animation-delay: 1.2s, 2.4s; }
+.word:nth-child(1) .letter:nth-child(7) { animation-delay: 1.4s, 2.6s; }
 
 /* Задержки анимации для слова "to" */
-.word:nth-child(2) .letter:nth-child(1) { animation-delay: 0.8s, 1.4s; }
-.word:nth-child(2) .letter:nth-child(2) { animation-delay: 0.9s, 1.5s; }
+.word:nth-child(2) .letter:nth-child(1) { animation-delay: 1.6s, 2.8s; }
+.word:nth-child(2) .letter:nth-child(2) { animation-delay: 1.8s, 3.0s; }
 
 /* Задержки анимации для слова "our" */
-.word:nth-child(3) .letter:nth-child(1) { animation-delay: 1.0s, 1.6s; }
-.word:nth-child(3) .letter:nth-child(2) { animation-delay: 1.1s, 1.7s; }
-.word:nth-child(3) .letter:nth-child(3) { animation-delay: 1.2s, 1.8s; }
+.word:nth-child(3) .letter:nth-child(1) { animation-delay: 2.0s, 3.2s; }
+.word:nth-child(3) .letter:nth-child(2) { animation-delay: 2.2s, 3.4s; }
+.word:nth-child(3) .letter:nth-child(3) { animation-delay: 2.4s, 3.6s; }
 
 /* Задержки анимации для слова "workspace" */
-.word:nth-child(4) .letter:nth-child(1) { animation-delay: 1.3s, 1.9s; }
-.word:nth-child(4) .letter:nth-child(2) { animation-delay: 1.4s, 2.0s; }
-.word:nth-child(4) .letter:nth-child(3) { animation-delay: 1.5s, 2.1s; }
-.word:nth-child(4) .letter:nth-child(4) { animation-delay: 1.6s, 2.2s; }
-.word:nth-child(4) .letter:nth-child(5) { animation-delay: 1.7s, 2.3s; }
-.word:nth-child(4) .letter:nth-child(6) { animation-delay: 1.8s, 2.4s; }
-.word:nth-child(4) .letter:nth-child(7) { animation-delay: 1.9s, 2.5s; }
-.word:nth-child(4) .letter:nth-child(8) { animation-delay: 2.0s, 2.6s; }
-.word:nth-child(4) .letter:nth-child(9) { animation-delay: 2.1s, 2.7s; }
+.word:nth-child(4) .letter:nth-child(1) { animation-delay: 2.6s, 3.8s; }
+.word:nth-child(4) .letter:nth-child(2) { animation-delay: 2.8s, 4.0s; }
+.word:nth-child(4) .letter:nth-child(3) { animation-delay: 3.0s, 4.2s; }
+.word:nth-child(4) .letter:nth-child(4) { animation-delay: 3.2s, 4.4s; }
+.word:nth-child(4) .letter:nth-child(5) { animation-delay: 3.4s, 4.6s; }
+.word:nth-child(4) .letter:nth-child(6) { animation-delay: 3.6s, 4.8s; }
+.word:nth-child(4) .letter:nth-child(7) { animation-delay: 3.8s, 5.0s; }
+.word:nth-child(4) .letter:nth-child(8) { animation-delay: 4.0s, 5.2s; }
+.word:nth-child(4) .letter:nth-child(9) { animation-delay: 4.2s, 5.4s; }
 
 .welcome-title::after {
   content: '';
@@ -182,7 +182,7 @@
   height: 4px;
   background: linear-gradient(90deg, #3b82f6 0%, #1e40af 20%, #f59e0b 40%, #fbbf24 60%, #fcd34d 80%, #3b82f6 100%);
   background-size: 200% 100%;
-  animation: underlineAppear 0.8s ease-out 3.2s forwards, colorWave 4s ease-in-out 3.2s infinite;
+  animation: underlineAppear 1.6s ease-out 6.4s forwards, colorWave 8s ease-in-out 6.4s infinite;
   border-radius: 2px;
 }
 
@@ -723,4 +723,86 @@
 
 .debug-info .btn-danger:hover {
   background: #c82333;
+}
+
+/* QR Code секция */
+.qr-code-section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 10;
+}
+
+.qr-title {
+  font-size: 1.2rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.qr-code-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+}
+
+.qr-url {
+  font-size: 1rem;
+  color: #fff;
+  margin-top: 1rem;
+  font-weight: 500;
+  word-break: break-all;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.qr-instruction {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.qr-refresh-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #f59e0b 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.qr-refresh-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.qr-loading {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1rem;
 }

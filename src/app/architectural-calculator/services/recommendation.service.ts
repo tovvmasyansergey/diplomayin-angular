@@ -60,7 +60,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'error',
         severity: 'critical',
-        title: 'Превышена прочность материала!',
+        title: 'rec.stressExceeded',
         description: `Максимальное напряжение (${analysis.maxStress.toFixed(2)} МПа) превышает прочность материала (${material.strength} МПа)`,
         parameter: 'maxStress',
         currentValue: analysis.maxStress,
@@ -71,7 +71,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'warning',
         severity: 'high',
-        title: 'Высокий уровень напряжения',
+        title: 'rec.highStress',
         description: `Напряжение (${analysis.maxStress.toFixed(2)} МПа) использует ${(stressRatio * 100).toFixed(1)}% прочности материала`,
         parameter: 'maxStress',
         currentValue: analysis.maxStress,
@@ -89,7 +89,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'error',
         severity: 'critical',
-        title: 'Критический запас прочности!',
+        title: 'rec.criticalSafety',
         description: `Коэффициент запаса (${analysis.safetyFactor.toFixed(2)}) слишком мал`,
         parameter: 'safetyFactor',
         currentValue: analysis.safetyFactor,
@@ -100,7 +100,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'warning',
         severity: 'high',
-        title: 'Недостаточный запас прочности',
+        title: 'rec.insufficientSafety',
         description: `Коэффициент запаса (${analysis.safetyFactor.toFixed(2)}) ниже рекомендуемого минимума (${this.STANDARDS.SAFETY_FACTOR_MIN})`,
         parameter: 'safetyFactor',
         currentValue: analysis.safetyFactor,
@@ -111,7 +111,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'success',
         severity: 'low',
-        title: 'Отличный запас прочности',
+        title: 'rec.goodSafety',
         description: `Коэффициент запаса (${analysis.safetyFactor.toFixed(2)}) соответствует нормам`,
         parameter: 'safetyFactor',
         currentValue: analysis.safetyFactor,
@@ -133,7 +133,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'warning',
         severity: 'high',
-        title: 'Прогиб превышает норму',
+        title: 'rec.deflectionExceeded',
         description: `Прогиб (${analysis.deflection.toFixed(1)} мм) превышает допустимое значение (${maxDeflection.toFixed(1)} мм) в ${ratio.toFixed(2)} раз`,
         parameter: 'deflection',
         currentValue: analysis.deflection,
@@ -152,7 +152,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'error',
         severity: 'high',
-        title: 'Недостаточная толщина',
+        title: 'rec.insufficientThickness',
         description: `Толщина (${params.thickness * 100} см) меньше минимально допустимой (${this.STANDARDS.MIN_THICKNESS * 100} см)`,
         parameter: 'thickness',
         currentValue: params.thickness,
@@ -167,7 +167,7 @@ export class RecommendationService {
         recommendations.push({
           type: 'error',
           severity: 'critical',
-          title: 'Недостаточная толщина для большой высоты',
+          title: 'rec.insufficientThicknessForHeight',
           description: `При высоте ${params.height}м требуется минимальная толщина ${this.STANDARDS.MIN_THICKNESS_FOR_HEIGHT * 100}см`,
           parameter: 'thickness',
           currentValue: params.thickness || 0,
@@ -183,7 +183,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'warning',
         severity: 'high',
-        title: 'Высота превышает рекомендуемую',
+        title: 'rec.heightExceeded',
         description: `Высота конструкции (${params.height}м) превышает рекомендуемый максимум (${this.STANDARDS.MAX_HEIGHT}м)`,
         parameter: 'height',
         currentValue: params.height,
@@ -199,7 +199,7 @@ export class RecommendationService {
         recommendations.push({
           type: 'warning',
           severity: 'medium',
-          title: 'Большое соотношение пролета к высоте',
+          title: 'rec.largeSpanRatio',
           description: `Соотношение пролета к высоте (${ratio.toFixed(2)}) слишком большое`,
           parameter: 'span',
           suggestion: `Рекомендуется увеличить высоту дуги или добавить дополнительные опоры`
@@ -208,7 +208,7 @@ export class RecommendationService {
         recommendations.push({
           type: 'info',
           severity: 'low',
-          title: 'Высокая дуга',
+          title: 'rec.highArch',
           description: `При такой высоте (${params.height}м) рекомендуется увеличить толщину для устойчивости`,
           parameter: 'thickness',
           currentValue: params.thickness,
@@ -230,7 +230,7 @@ export class RecommendationService {
         recommendations.push({
           type: 'warning',
           severity: 'medium',
-          title: 'Тонкая бетонная конструкция при большом пролете',
+          title: 'rec.thinConcrete',
           description: `Для бетонной арки с пролетом ${params.span}м толщина ${params.thickness * 100}см может быть недостаточной`,
           parameter: 'thickness',
           currentValue: params.thickness,
@@ -245,7 +245,7 @@ export class RecommendationService {
       recommendations.push({
         type: 'info',
         severity: 'low',
-        title: 'Тонкая стальная конструкция',
+        title: 'rec.thinSteel',
         description: 'Стальные конструкции требуют дополнительной проверки на местное выпучивание',
         suggestion: 'Убедитесь, что конструкция имеет достаточное поперечное армирование'
       });
