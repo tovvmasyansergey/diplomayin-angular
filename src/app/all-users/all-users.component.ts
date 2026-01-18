@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../service/user.service';
 import { AuthService } from '../service/auth.service';
+import { RegisterRequestModel } from '../models/user-model/register-request.model';
 
 export interface User {
   id: number;
@@ -287,22 +288,20 @@ export class AllUsersComponent implements OnInit {
     }
 
     this.isSaving = true;
-    const formData = new FormData();
 
-    formData.append('firstname', this.editingUser.firstname);
-    formData.append('lastname', this.editingUser.lastname);
-    formData.append('email', this.editingUser.email);
-    formData.append('phone', this.editingUser.phone);
+    // Create RegisterRequestModel object
+    const registerData: RegisterRequestModel = {
+      email: this.editingUser.email,
+      firstname: this.editingUser.firstname,
+      lastname: this.editingUser.lastname,
+      phone: this.editingUser.phone,
+      location: this.editingUser.location || undefined,
+      // Password not needed for edit
+      password: ''
+    };
 
-    if (this.editingUser.location) {
-      formData.append('location', this.editingUser.location);
-    }
-
-    if (this.selectedEditFile) {
-      formData.append('profilePicture', this.selectedEditFile);
-    }
-
-    this.authService.editUser(this.editingUser.id, formData).subscribe({
+    // Call editUser with DTO and optional file
+    this.authService.editUser(this.editingUser.id, registerData, this.selectedEditFile || undefined).subscribe({
       next: () => {
         this.closeEditModal();
         this.loadUsers(this.currentPage); // Reload current page

@@ -55,23 +55,18 @@ export class RegisterComponent {
     }
     this.isLoading = true;
 
-    // Создаем FormData для отправки всех данных
-    const formData = new FormData();
-    formData.append('email', this.email);
-    formData.append('password', this.password);
-    formData.append('firstname', this.firstname);
-    formData.append('lastname', this.lastname);
-    formData.append('phone', this.phone);
-    
-    if (this.location) {
-      formData.append('location', this.location);
-    }
-    
-    if (this.selectedFile) {
-      formData.append('profilePicture', this.selectedFile);
-    }
+    // Create RegisterRequestModel object
+    const registerData: RegisterRequestModel = {
+      email: this.email,
+      password: this.password,
+      firstname: this.firstname,
+      lastname: this.lastname,
+      phone: this.phone,
+      location: this.location || undefined
+    };
 
-    this.authService.register(formData).subscribe({
+    // Call register with DTO and optional file
+    this.authService.register(registerData, this.selectedFile || undefined).subscribe({
       next: () => {
         this.router.navigate(['/app']);
       },

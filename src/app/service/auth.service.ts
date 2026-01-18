@@ -1,10 +1,11 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Router} from '@angular/router';
 import {Observable} from 'rxjs';
 import {LoginRequestModel} from '../models/user-model/login.request.model';
 import {LoginCredentialsModel} from '../models/user-model/login-credentials.model';
 import {EmployeeVerifyModel} from '../models/user-model/employee-verify.model';
+import {RegisterRequestModel} from '../models/user-model/register-request.model';
 import {API_CONSTANTS} from '../constants/api.constants';
 
 @Injectable({
@@ -23,8 +24,27 @@ export class AuthService {
   ) {
   }
 
-  register(formData: FormData): Observable<string> {
+  /**
+   * Register a new user with optional profile picture
+   * @param registerData - User registration data
+   * @param profilePicture - Optional profile picture file
+   */
+  register(registerData: RegisterRequestModel, profilePicture?: File): Observable<string> {
     const path = `${this.BASE_PATH}auth/signup`;
+    
+    // Create FormData for multipart/form-data request
+    const formData = new FormData();
+    
+    // Add DTO as JSON string in "data" part (Spring Boot will deserialize to RegisterUserDto)
+    formData.append('data', new Blob([JSON.stringify(registerData)], {
+      type: 'application/json'
+    }));
+    
+    // Add profile picture if provided
+    if (profilePicture) {
+      formData.append('profilePicture', profilePicture);
+    }
+    
     return this.http.post(path, formData, {responseType: 'text'});
   }
 
@@ -33,13 +53,53 @@ export class AuthService {
     return this.http.get<any>(path);
   }
 
-  editUser(userId: number, formData: FormData): Observable<string> {
+  /**
+   * Edit current user profile (no file upload)
+   * @param registerData - User data to update
+   */
+  edit(registerData: RegisterRequestModel): Observable<string> {
+    const path = `${this.BASE_PATH}auth/edit`;
+    const token = this.getToken();
+    
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    });
+    
+    return this.http.post(path, registerData, {
+      responseType: 'text',
+      headers: headers
+    });
+  }
+
+  /**
+   * Edit user by ID with optional profile picture
+   * @param userId - User ID to edit
+   * @param registerData - User data to update
+   * @param profilePicture - Optional profile picture file
+   */
+  editUser(userId: number, registerData: RegisterRequestModel, profilePicture?: File): Observable<string> {
     const path = `${this.BASE_PATH}auth/edit/${userId}`;
     const token = this.getToken();
-    const headers: any = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    
+    // Create FormData for multipart/form-data request
+    const formData = new FormData();
+    
+    // Add DTO as JSON string in "data" part
+    formData.append('data', new Blob([JSON.stringify(registerData)], {
+      type: 'application/json'
+    }));
+    
+    // Add profile picture if provided
+    if (profilePicture) {
+      formData.append('profilePicture', profilePicture);
     }
+    
+    const headers = new HttpHeaders({
+      ...(token && { 'Authorization': `Bearer ${token}` })
+      // Note: Don't set Content-Type for FormData - browser will set it with boundary
+    });
+    
     return this.http.put(path, formData, {
       responseType: 'text',
       headers: headers
