@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
 import { API_CONSTANTS } from '../constants/api.constants';
 
 export interface User {
@@ -24,10 +24,16 @@ export class UserService {
   constructor(private http: HttpClient) {}
 
   getAllUsers(): Observable<User[]> {
-    const path = `${this.BASE_PATH}api/users/all`;
-    return this.http.get<User[]>(path, {
+    // Use pagination with large page size to get all users
+    const path = `${this.BASE_PATH}api/users?page=0&size=1000`;
+    return this.http.get<any>(path, {
       headers: this.getHeaders()
-    });
+    }).pipe(
+      map((response: any) => {
+        // Extract content from paginated response
+        return response.content || [];
+      })
+    );
   }
 
   private getHeaders() {

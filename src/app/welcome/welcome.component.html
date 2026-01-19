@@ -69,11 +69,10 @@
 
     <!-- QR Code для доступа через Wi-Fi -->
     <div class="qr-code-section">
-      <p class="qr-title">📱 Scan to open on mobile device</p>
       <div class="qr-code-container" *ngIf="qrCodeImageUrl">
-        <img 
-          [src]="qrCodeImageUrl" 
-          alt="QR Code" 
+        <img
+          [src]="qrCodeImageUrl"
+          alt="QR Code"
           class="qr-code-image"
           (error)="onQrCodeError($event)"
           (load)="onQrCodeLoad()" />
@@ -81,8 +80,6 @@
       <div class="qr-code-container" *ngIf="!qrCodeImageUrl">
         <div class="qr-loading">Loading QR Code...</div>
       </div>
-      <p class="qr-url">{{ wifiUrl }}</p>
-      <p class="qr-instruction">Connect to the same Wi-Fi network and scan this QR code</p>
       <button class="qr-refresh-btn" (click)="refreshQRCode()">
         🔄 Refresh QR Code
       </button>
