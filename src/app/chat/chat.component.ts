@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ChatMessage } from '../models/chat-message.model';
 import { WebSocketService } from '../service/websocket.service';
@@ -23,7 +23,7 @@ const BACKEND_BASE_URL = getBackendBaseUrl();
   selector: 'app-chat',
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   standalone: true
 })
 export class ChatComponent implements OnInit, OnDestroy {
@@ -579,7 +579,7 @@ export class ChatComponent implements OnInit, OnDestroy {
    * Навигация
    */
   navigateToHome(): void {
-    this.router.navigate(['/welcome']);
+    this.router.navigate(['/']);
   }
 
   navigateToUsers(): void {

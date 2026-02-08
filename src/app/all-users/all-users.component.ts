@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { UserService } from '../service/user.service';
 import { AuthService } from '../service/auth.service';
 import { RegisterRequestModel } from '../models/user-model/register-request.model';
@@ -54,6 +54,8 @@ export class AllUsersComponent implements OnInit {
   selectedEditFile: File | null = null;
   editImagePreview: string | null = null;
   isSaving: boolean = false;
+  editFieldErrors: { [key: string]: string } = {};
+  editServerError: string = '';
 
   // Delete modal properties
   showDeleteModal: boolean = false;
@@ -232,6 +234,8 @@ export class AllUsersComponent implements OnInit {
     this.editingUser = { ...user };
     this.selectedEditFile = null;
     this.editImagePreview = null;
+    this.editFieldErrors = {};
+    this.editServerError = '';
     this.showEditModal = true;
   }
 
@@ -287,50 +291,93 @@ export class AllUsersComponent implements OnInit {
     this.editImagePreview = null;
   }
 
-  saveUser(): void {
+  saveUser(form: NgForm): void {
     if (!this.editingUser) return;
 
-    // Дополнительная проверка прав доступа перед сохранением
+    // Сбрасываем ошибки
+    this.editFieldErrors = {};
+    this.editServerError = '';
+
+    // Проверяем фронтенд-валидацию
+    if (form.invalid) {
+      // Помечаем все поля как touched, чтобы показать ошибки
+      Object.keys(form.controls).forEach(key => {
+        form.controls[key].markAsTouched();
+      });
+      return;
+    }
+
+    // Проверка прав доступа
     if (!this.canEditUser(this.editingUser)) {
-      alert('You do not have permission to edit this user');
-      this.closeEditModal();
+      this.editServerError = 'You do not have permission to edit this user';
       return;
     }
 
     this.isSaving = true;
 
     // Create data object for edit (password not needed)
-    const registerData: any = {
+    const editData: any = {
       email: this.editingUser.email,
       firstname: this.editingUser.firstname,
       lastname: this.editingUser.lastname,
-      phone: this.editingUser.phone || '',
+      phone: this.editingUser.phone || undefined,
       location: this.editingUser.location || undefined,
     };
 
     // Call editUser with DTO and optional file
-    this.authService.editUser(this.editingUser.id, registerData, this.selectedEditFile || undefined).subscribe({
+    this.authService.editUser(this.editingUser.id, editData, this.selectedEditFile || undefined).subscribe({
       next: () => {
         this.closeEditModal();
-        this.loadUsers(this.currentPage); // Reload current page
-        alert('User updated successfully');
+        this.loadUsers(this.currentPage);
       },
       error: (error) => {
         console.error('Error updating user:', error);
-        // Показываем более информативное сообщение об ошибке
-        if (error.status === 403) {
-          alert('You do not have permission to edit this user');
-        } else if (error.status === 401) {
-          alert('Please log in to continue');
-        } else {
-          alert('Failed to update user: ' + (error.error || error.message || 'Unknown error'));
-        }
         this.isSaving = false;
+
+        // Парсим ошибки валидации с бекенда
+        if (error.status === 400) {
+          this.parseBackendErrors(error);
+        } else if (error.status === 403) {
+          this.editServerError = 'You do not have permission to edit this user';
+        } else if (error.status === 401) {
+          this.editServerError = 'Session expired. Please log in again';
+        } else {
+          this.editServerError = 'An unexpected error occurred. Please try again';
+        }
       },
       complete: () => {
         this.isSaving = false;
       }
     });
+  }
+
+  private parseBackendErrors(error: any): void {
+    try {
+      const body = typeof error.error === 'string' ? JSON.parse(error.error) : error.error;
+
+      // Формат от GlobalExceptionHandler: { detail: "field: message, field: message" }
+      if (body?.detail) {
+        const parts = body.detail.split(', ');
+        for (const part of parts) {
+          const colonIndex = part.indexOf(':');
+          if (colonIndex > 0) {
+            const field = part.substring(0, colonIndex).trim().toLowerCase();
+            const message = part.substring(colonIndex + 1).trim();
+            this.editFieldErrors[field] = message;
+          }
+        }
+        // Если ни одно поле не распозналось — показываем общую ошибку
+        if (Object.keys(this.editFieldErrors).length === 0) {
+          this.editServerError = body.detail;
+        }
+      } else if (body?.message) {
+        this.editServerError = body.message;
+      } else {
+        this.editServerError = 'Validation failed. Please check the fields';
+      }
+    } catch {
+      this.editServerError = 'Validation failed. Please check the fields';
+    }
   }
 
   // Delete user methods

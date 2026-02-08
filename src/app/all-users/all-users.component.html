@@ -230,7 +230,12 @@
         </button>
       </div>
 
-      <form class="edit-form" (ngSubmit)="saveUser()" #editForm="ngForm">
+      <!-- Общая ошибка от сервера -->
+      <div *ngIf="editServerError" class="server-error-message">
+        {{ editServerError }}
+      </div>
+
+      <form class="edit-form" (ngSubmit)="saveUser(editForm)" #editForm="ngForm">
           <div class="form-group">
             <label for="editFirstname">First Name</label>
             <input
@@ -238,7 +243,16 @@
               id="editFirstname"
               name="firstname"
               [(ngModel)]="editingUser.firstname"
-              required>
+              #firstnameField="ngModel"
+              required
+              minlength="2"
+              maxlength="50"
+              [class.input-error]="(firstnameField.invalid && firstnameField.touched) || editFieldErrors['firstname']">
+            <span class="field-error" *ngIf="firstnameField.invalid && firstnameField.touched">
+              <span *ngIf="firstnameField.errors?.['required']">First name is required</span>
+              <span *ngIf="firstnameField.errors?.['minlength']">Minimum 2 characters</span>
+            </span>
+            <span class="field-error" *ngIf="editFieldErrors['firstname']">{{ editFieldErrors['firstname'] }}</span>
           </div>
 
           <div class="form-group">
@@ -248,7 +262,16 @@
               id="editLastname"
               name="lastname"
               [(ngModel)]="editingUser.lastname"
-              required>
+              #lastnameField="ngModel"
+              required
+              minlength="2"
+              maxlength="50"
+              [class.input-error]="(lastnameField.invalid && lastnameField.touched) || editFieldErrors['lastname']">
+            <span class="field-error" *ngIf="lastnameField.invalid && lastnameField.touched">
+              <span *ngIf="lastnameField.errors?.['required']">Last name is required</span>
+              <span *ngIf="lastnameField.errors?.['minlength']">Minimum 2 characters</span>
+            </span>
+            <span class="field-error" *ngIf="editFieldErrors['lastname']">{{ editFieldErrors['lastname'] }}</span>
           </div>
 
           <div class="form-group">
@@ -258,7 +281,15 @@
               id="editEmail"
               name="email"
               [(ngModel)]="editingUser.email"
-              required>
+              #emailField="ngModel"
+              required
+              email
+              [class.input-error]="(emailField.invalid && emailField.touched) || editFieldErrors['email']">
+            <span class="field-error" *ngIf="emailField.invalid && emailField.touched">
+              <span *ngIf="emailField.errors?.['required']">Email is required</span>
+              <span *ngIf="emailField.errors?.['email']">Enter a valid email</span>
+            </span>
+            <span class="field-error" *ngIf="editFieldErrors['email']">{{ editFieldErrors['email'] }}</span>
           </div>
 
           <div class="form-group">
@@ -268,7 +299,9 @@
               id="editPhone"
               name="phone"
               [(ngModel)]="editingUser.phone"
-              required>
+              #phoneField="ngModel"
+              [class.input-error]="editFieldErrors['phone']">
+            <span class="field-error" *ngIf="editFieldErrors['phone']">{{ editFieldErrors['phone'] }}</span>
           </div>
 
           <div class="form-group">
@@ -277,7 +310,9 @@
               type="text"
               id="editLocation"
               name="location"
-              [(ngModel)]="editingUser.location">
+              [(ngModel)]="editingUser.location"
+              [class.input-error]="editFieldErrors['location']">
+            <span class="field-error" *ngIf="editFieldErrors['location']">{{ editFieldErrors['location'] }}</span>
           </div>
 
         <div class="form-group">
@@ -313,7 +348,7 @@
 
         <div class="form-actions">
           <button type="button" class="cancel-btn" (click)="closeEditModal()">Cancel</button>
-          <button type="submit" class="save-btn" [disabled]="isSaving">
+          <button type="submit" class="save-btn" [disabled]="isSaving || editForm.invalid">
             {{ isSaving ? 'Saving...' : 'Save Changes' }}
           </button>
         </div>
