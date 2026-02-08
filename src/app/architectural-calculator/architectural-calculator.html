@@ -195,8 +195,8 @@
           (click)="selectedMaterial = material">
           <div class="material-info">
             <h3>{{ getMaterialName(material.name) }}</h3>
-            <p><span class="material-label">{{ translate('density') }}</span> <span class="material-value">{{ material.density }} кг/м³</span></p>
-            <p><span class="material-label">{{ translate('cost') }}</span> <span class="material-value">{{ getPriceWithCurrency(material.costPerUnit) }}/м³</span></p>
+            <p><span class="material-label">{{ translate('density') }}</span> <span class="material-value">{{ material.density }} {{ translate('unitKgPerM3') }}</span></p>
+            <p><span class="material-label">{{ translate('cost') }}</span> <span class="material-value">{{ getPriceWithCurrency(material.costPerUnit) }}{{ translate('unitPerM3') }}</span></p>
           </div>
         </div>
       </div>
@@ -231,15 +231,15 @@
           <h3>📏 {{ translate('measurements') }}</h3>
           <div class="measurement-item">
             <span class="label">{{ translate('area') }}</span>
-            <span class="value">{{ calculationResult.measurements.area | number:'1.2-2' }} м²</span>
+            <span class="value">{{ calculationResult.measurements.area | number:'1.2-2' }} {{ translate('unitM2') }}</span>
           </div>
           <div class="measurement-item">
             <span class="label">{{ translate('arcLength') }}</span>
-            <span class="value">{{ calculationResult.measurements.arcLength | number:'1.2-2' }} м</span>
+            <span class="value">{{ calculationResult.measurements.arcLength | number:'1.2-2' }} {{ translate('unitM') }}</span>
           </div>
           <div class="measurement-item">
             <span class="label">{{ translate('volume') }}</span>
-            <span class="value">{{ calculationResult.measurements.volume | number:'1.2-2' }} м³</span>
+            <span class="value">{{ calculationResult.measurements.volume | number:'1.2-2' }} {{ translate('unitM3') }}</span>
           </div>
         </div>
 
@@ -252,11 +252,11 @@
           </div>
           <div class="material-item">
             <span class="label">{{ translate('quantity') }}</span>
-            <span class="value">{{ calculationResult.materialEstimate.quantity | number:'1.2-2' }} м³</span>
+            <span class="value">{{ calculationResult.materialEstimate.quantity | number:'1.2-2' }} {{ translate('unitM3') }}</span>
           </div>
           <div class="material-item">
             <span class="label">{{ translate('weight') }}</span>
-            <span class="value">{{ calculationResult.materialEstimate.weight | number:'1.0-0' }} кг</span>
+            <span class="value">{{ calculationResult.materialEstimate.weight | number:'1.0-0' }} {{ translate('unitKg') }}</span>
           </div>
           <div class="material-item">
             <span class="label">{{ translate('totalCost') }}</span>
@@ -294,7 +294,7 @@
           <h3>🏗️ {{ translate('structuralAnalysis') }}</h3>
           <div class="analysis-item">
             <span class="label">{{ translate('maxStress') }}</span>
-            <span class="value">{{ structuralAnalysis.maxStress | number:'1.2-2' }} МПа</span>
+            <span class="value">{{ structuralAnalysis.maxStress | number:'1.2-2' }} {{ translate('unitMPa') }}</span>
           </div>
           <div class="analysis-item">
             <span class="label">{{ translate('safetyFactor') }}</span>
@@ -304,15 +304,15 @@
           </div>
           <div class="analysis-item">
             <span class="label">{{ translate('deflection') }}</span>
-            <span class="value">{{ structuralAnalysis.deflection | number:'1.2-2' }} мм</span>
+            <span class="value">{{ structuralAnalysis.deflection | number:'1.2-2' }} {{ translate('unitMm') }}</span>
           </div>
           <div class="analysis-item">
             <span class="label">{{ translate('bucklingLoad') }}</span>
-            <span class="value">{{ structuralAnalysis.bucklingLoad | number:'1.0-0' }} Н</span>
+            <span class="value">{{ structuralAnalysis.bucklingLoad | number:'1.0-0' }} {{ translate('unitKN') }}</span>
           </div>
           <div class="analysis-item">
             <span class="label">{{ translate('naturalFrequency') }}</span>
-            <span class="value">{{ structuralAnalysis.naturalFrequency | number:'1.2-2' }} Гц</span>
+            <span class="value">{{ structuralAnalysis.naturalFrequency | number:'1.2-2' }} {{ translate('unitHz') }}</span>
           </div>
         </div>
       </div>

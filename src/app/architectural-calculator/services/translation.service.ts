@@ -174,6 +174,56 @@ export class TranslationService {
       ru: 'руб',
       hy: 'դրամ'
     },
+    'unitKgPerM3': {
+      en: 'kg/m³',
+      ru: 'кг/м³',
+      hy: 'կգ/մ³'
+    },
+    'unitPerM3': {
+      en: '/m³',
+      ru: '/м³',
+      hy: '/մ³'
+    },
+    'unitKg': {
+      en: 'kg',
+      ru: 'кг',
+      hy: 'կգ'
+    },
+    'unitM3': {
+      en: 'm³',
+      ru: 'м³',
+      hy: 'մ³'
+    },
+    'unitM2': {
+      en: 'm²',
+      ru: 'м²',
+      hy: 'մ²'
+    },
+    'unitM': {
+      en: 'm',
+      ru: 'м',
+      hy: 'մ'
+    },
+    'unitMPa': {
+      en: 'MPa',
+      ru: 'МПа',
+      hy: 'ՄՊա'
+    },
+    'unitMm': {
+      en: 'mm',
+      ru: 'мм',
+      hy: 'մմ'
+    },
+    'unitKN': {
+      en: 'kN',
+      ru: 'кН',
+      hy: 'կՆ'
+    },
+    'unitHz': {
+      en: 'Hz',
+      ru: 'Гц',
+      hy: 'Հց'
+    },
     
     // Buttons
     'calculate': {
