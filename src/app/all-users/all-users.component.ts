@@ -10,6 +10,8 @@ export interface User {
   id: number;
   firstname: string;
   lastname: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string;
   location?: string;
@@ -76,7 +78,13 @@ export class AllUsersComponent implements OnInit {
     this.currentPage = page;
     this.authService.getAllUsers(page, this.pageSize).subscribe({
       next: (response: any) => {
-        this.users = response.content || [];
+        // Normalize field names: backend UserDto uses firstName/lastName (camelCase),
+        // but login response uses firstname/lastname (lowercase)
+        this.users = (response.content || []).map((user: any) => ({
+          ...user,
+          firstname: user.firstname || user.firstName || '',
+          lastname: user.lastname || user.lastName || '',
+        }));
         this.totalPages = response.totalPages || 0;
         this.totalElements = response.totalElements || 0;
         this.currentPage = response.number || 0;
@@ -127,7 +135,9 @@ export class AllUsersComponent implements OnInit {
   }
 
   getInitials(user: User): string {
-    return `${user.firstname.charAt(0)}${user.lastname.charAt(0)}`.toUpperCase();
+    const first = user.firstname ? user.firstname.charAt(0) : '';
+    const last = user.lastname ? user.lastname.charAt(0) : '';
+    return `${first}${last}`.toUpperCase() || '?';
   }
 
   getProfilePictureUrl(profilePicture: string): string {
@@ -289,15 +299,13 @@ export class AllUsersComponent implements OnInit {
 
     this.isSaving = true;
 
-    // Create RegisterRequestModel object
-    const registerData: RegisterRequestModel = {
+    // Create data object for edit (password not needed)
+    const registerData: any = {
       email: this.editingUser.email,
       firstname: this.editingUser.firstname,
       lastname: this.editingUser.lastname,
-      phone: this.editingUser.phone,
+      phone: this.editingUser.phone || '',
       location: this.editingUser.location || undefined,
-      // Password not needed for edit
-      password: ''
     };
 
     // Call editUser with DTO and optional file

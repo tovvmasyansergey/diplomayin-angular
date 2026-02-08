@@ -283,7 +283,7 @@
 .content-section {
   position: relative;
   z-index: 10;
-  max-width: 1200px;
+  width: 70%;
   margin: 0 auto;
 }
 
@@ -820,14 +820,15 @@
 }
 
 .edit-modal {
-  background: var(--mat-sys-primary-container);
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 40%, #2563eb 70%, #d97706 100%);
   border-radius: 16px;
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
   animation: modalSlideIn 0.3s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .edit-header {
@@ -835,13 +836,22 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.edit-header .close-btn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.edit-header .close-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .edit-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: white;
   margin: 0;
 }
 
@@ -857,22 +867,24 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #374151;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
 }
 
 .form-actions {
@@ -881,7 +893,7 @@
   justify-content: flex-end;
   margin-top: 2rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .cancel-btn, .save-btn {
@@ -894,26 +906,32 @@
 }
 
 .cancel-btn {
-  background: #f3f4f6;
-  color: #374151;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .cancel-btn:hover {
-  background: #e5e7eb;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .save-btn {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 .save-btn:hover:not(:disabled) {
-  background: #2563eb;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+  transform: translateY(-1px);
 }
 
 .save-btn:disabled {
-  background: #9ca3af;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Delete Modal */
@@ -932,12 +950,13 @@
 }
 
 .delete-modal {
-  background: var(--mat-sys-primary-container);
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 40%, #2563eb 70%, #d97706 100%);
   border-radius: 16px;
   width: 90%;
   max-width: 400px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
   animation: modalSlideIn 0.3s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .delete-header {
@@ -945,13 +964,22 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.delete-header .close-btn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.delete-header .close-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .delete-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: white;
   margin: 0;
 }
 
@@ -967,12 +995,12 @@
 
 .delete-message {
   font-size: 1.1rem;
-  color: #374151;
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 0.5rem;
 }
 
 .delete-warning {
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.9rem;
 }
 
@@ -981,7 +1009,7 @@
   gap: 1rem;
   justify-content: flex-end;
   padding: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .delete-confirm-btn {
@@ -1014,18 +1042,18 @@
 }
 
 .file-upload-display {
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .file-upload-display:hover {
-  border-color: #3b82f6;
-  background: #f1f5f9;
+  border-color: #f59e0b;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .file-upload-placeholder {
@@ -1033,11 +1061,11 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .upload-icon {
-  color: #3b82f6;
+  color: #f59e0b;
 }
 
 .file-selected {
@@ -1062,7 +1090,7 @@
 
 .file-name {
   font-size: 0.9rem;
-  color: #374151;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
 }
 

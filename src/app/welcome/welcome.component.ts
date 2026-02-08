@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../service/auth.service';
+import { Subscription, filter } from 'rxjs';
 
 @Component({
   selector: 'app-welcome',
@@ -10,9 +11,14 @@ import { AuthService } from '../service/auth.service';
   templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.css'
 })
-export class WelcomeComponent implements OnInit {
+export class WelcomeComponent implements OnInit, OnDestroy {
   wifiUrl: string = 'http://192.168.0.208:4200';
   qrCodeImageUrl: string = '';
+
+  isLoggedIn: boolean = false;
+  currentUser: any = null;
+
+  private routerSub?: Subscription;
 
   constructor(
     private router: Router,
@@ -22,6 +28,21 @@ export class WelcomeComponent implements OnInit {
   ngOnInit(): void {
     // Генерируем QR-код для Wi-Fi доступа
     this.generateQRCode();
+    // Cache auth state once on init
+    this.updateAuthState();
+    // Update auth state on navigation changes
+    this.routerSub = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => this.updateAuthState());
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
+
+  private updateAuthState(): void {
+    this.isLoggedIn = this.authService.isLoggedIn();
+    this.currentUser = this.authService.getCurrentUser();
   }
 
   generateQRCode(): void {
@@ -43,20 +64,9 @@ export class WelcomeComponent implements OnInit {
     console.log('QR Code image loaded successfully');
   }
 
-  get isLoggedIn(): boolean {
-    const loggedIn = this.authService.isLoggedIn();
-    console.log('WelcomeComponent isLoggedIn:', loggedIn);
-    return loggedIn;
-  }
-
-  get currentUser(): any {
-    const user = this.authService.getCurrentUser();
-    console.log('WelcomeComponent currentUser:', user);
-    return user;
-  }
-
   logout(): void {
     this.authService.logout();
+    this.updateAuthState();
   }
 
   checkAuthStatus(): void {
