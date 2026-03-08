@@ -103,57 +103,19 @@ export class MaterialCalculatorService {
     return this.materials;
   }
 
-  getMaterialByName(name: string): Material | undefined {
-    return this.materials.find(material => material.name === name);
-  }
-
-  calculateMaterialCost(volume: number, material: Material): number {
-    return volume * material.costPerUnit;
-  }
-
-  calculateMaterialWeight(volume: number, material: Material): number {
-    return volume * material.density;
-  }
-
-  getOptimalMaterial(structures: { volume: number, material: Material }[]): Material {
-    // Простая логика выбора оптимального материала
-    // В реальном приложении здесь была бы более сложная логика
-    const totalCosts = this.materials.map(material => {
-      const totalCost = structures.reduce((sum, structure) => {
-        return sum + this.calculateMaterialCost(structure.volume, material);
-      }, 0);
-      return { material, totalCost };
-    });
-
-    return totalCosts.reduce((min, current) => 
-      current.totalCost < min.totalCost ? current : min
-    ).material;
-  }
-
-  addCustomMaterial(material: Material): void {
-    this.materials.push(material);
-  }
-
-  updateMaterialCost(materialName: string, newCost: number): void {
-    const material = this.getMaterialByName(materialName);
-    if (material) {
-      material.costPerUnit = newCost;
-    }
-  }
-
   getMaterialSuggestions(structureType: string): Material[] {
     // Предложения материалов в зависимости от типа конструкции
     switch (structureType.toLowerCase()) {
       case 'parabola':
-        return this.materials.filter(m => 
+        return this.materials.filter(m =>
           ['Бетон', 'Сталь', 'Стекло'].includes(m.name)
         );
       case 'ellipse':
-        return this.materials.filter(m => 
+        return this.materials.filter(m =>
           ['Бетон', 'Сталь', 'Поликарбонат'].includes(m.name)
         );
       case 'hyperbola':
-        return this.materials.filter(m => 
+        return this.materials.filter(m =>
           ['Сталь', 'Алюминий', 'Композитные материалы'].includes(m.name)
         );
       default:

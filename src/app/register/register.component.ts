@@ -38,6 +38,7 @@ export class RegisterComponent {
   lastnameError: string = '';
   phoneError: string = '';
   fileError: string = '';
+  serverError: string = '';
 
   constructor(
     private router: Router,
@@ -65,6 +66,9 @@ export class RegisterComponent {
       location: this.location || undefined
     };
 
+    // Clear previous server errors
+    this.clearServerErrors();
+
     // Call register with DTO and optional file
     this.authService.register(registerData, this.selectedFile || undefined).subscribe({
       next: () => {
@@ -73,7 +77,7 @@ export class RegisterComponent {
       error: (error) => {
         console.error('Registration error:', error);
         this.isLoading = false;
-        alert('Registration failed. Please try again.');
+        this.parseBackendErrors(error);
       },
       complete: () => {
         this.isLoading = false;
@@ -243,5 +247,62 @@ export class RegisterComponent {
 
     return isEmailValid && isPasswordValid && isConfirmPasswordValid &&
            isFirstnameValid && isLastnameValid && isPhoneValid;
+  }
+
+  private clearServerErrors(): void {
+    this.serverError = '';
+    this.emailError = '';
+    this.passwordError = '';
+    this.firstnameError = '';
+    this.lastnameError = '';
+    this.phoneError = '';
+  }
+
+  private parseBackendErrors(error: any): void {
+    if (error.status === 400) {
+      // Backend returns "field: message, field: message" format
+      const detail = error.error?.detail || error.error?.message || '';
+      if (detail) {
+        const parts = detail.split(', ');
+        let matched = false;
+        for (const part of parts) {
+          const colonIndex = part.indexOf(':');
+          if (colonIndex > 0) {
+            const field = part.substring(0, colonIndex).trim().toLowerCase();
+            const message = part.substring(colonIndex + 1).trim();
+            matched = true;
+            switch (field) {
+              case 'email':
+                this.emailError = message;
+                break;
+              case 'password':
+                this.passwordError = message;
+                break;
+              case 'firstname':
+                this.firstnameError = message;
+                break;
+              case 'lastname':
+                this.lastnameError = message;
+                break;
+              case 'phone':
+                this.phoneError = message;
+                break;
+              default:
+                this.serverError = message;
+                break;
+            }
+          }
+        }
+        if (!matched) {
+          this.serverError = detail;
+        }
+      } else {
+        this.serverError = 'Registration failed. Please check your data.';
+      }
+    } else if (error.status === 409) {
+      this.emailError = 'User with this email already exists';
+    } else {
+      this.serverError = 'An unexpected error occurred. Please try again.';
+    }
   }
 }

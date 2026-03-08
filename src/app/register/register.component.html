@@ -171,6 +171,8 @@
           <div *ngIf="confirmPasswordError" class="field-error">{{ confirmPasswordError }}</div>
         </div>
 
+        <div *ngIf="serverError" class="server-error-message">{{ serverError }}</div>
+
         <div class="form-options">
           <label class="checkbox-label">
             <input type="checkbox" [(ngModel)]="agreeTerms" name="agreeTerms" required>

@@ -1,15 +1,13 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CalculationResult, Material, ArchitecturalStructure, StructuralAnalysis, VisualizationSettings, Recommendation } from './interfaces/architectural.interface';
+import { CalculationResult, Material, StructuralAnalysis, Recommendation } from './interfaces/architectural.interface';
 import { ArchitecturalCalculationsService } from './services/architectural-calculations.service';
 import { MaterialCalculatorService } from './services/material-calculator.service';
 import { RecommendationService } from './services/recommendation.service';
 import { TranslationService, Language } from './services/translation.service';
-import * as jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, AlignmentType, Table, TableRow, TableCell, WidthType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType } from 'docx';
 import { saveAs } from 'file-saver';
 
 @Component({
@@ -465,442 +463,330 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
   }
 
   /**
+   * Helper: get translated curve type name
+   */
+  private getCurveTypeName(): string {
+    return this.calculationResult?.type === 'parabola' ? this.translate('parabola') :
+           this.calculationResult?.type === 'ellipse' ? this.translate('ellipse') :
+           this.calculationResult?.type === 'hyperbola' ? this.translate('hyperbola') :
+           this.translate('export.unknown');
+  }
+
+  /**
+   * Helper: build summary rows for export
+   */
+  private getExportRows(): { label: string; value: string }[] {
+    const rows: { label: string; value: string }[] = [];
+    if (!this.calculationResult) return rows;
+
+    // Curve type & equation
+    rows.push({ label: this.translate('export.curveType'), value: this.getCurveTypeName() });
+    rows.push({ label: this.translate('export.equation'), value: this.calculationResult.equation });
+
+    // Measurements
+    rows.push({ label: this.translate('area'), value: `${this.calculationResult.measurements.area.toFixed(2)} ${this.translate('unitM2')}` });
+    rows.push({ label: this.translate('arcLength'), value: `${this.calculationResult.measurements.arcLength.toFixed(2)} ${this.translate('unitM')}` });
+    rows.push({ label: this.translate('volume'), value: `${this.calculationResult.measurements.volume.toFixed(2)} ${this.translate('unitM3')}` });
+
+    // Materials
+    rows.push({ label: this.translate('material'), value: this.getMaterialName(this.calculationResult.materialEstimate.material.name) });
+    rows.push({ label: this.translate('quantity'), value: `${this.calculationResult.materialEstimate.quantity.toFixed(2)} ${this.translate('unitM3')}` });
+    rows.push({ label: this.translate('weight'), value: `${this.calculationResult.materialEstimate.weight.toFixed(0)} ${this.translate('unitKg')}` });
+    rows.push({ label: this.translate('totalCost'), value: this.getPriceWithCurrency(this.calculationResult.materialEstimate.totalCost) });
+
+    // Structural analysis
+    if (this.structuralAnalysis) {
+      rows.push({ label: this.translate('maxStress'), value: `${this.structuralAnalysis.maxStress.toFixed(2)} ${this.translate('unitMPa')}` });
+      rows.push({ label: this.translate('safetyFactor'), value: this.structuralAnalysis.safetyFactor.toFixed(2) });
+      rows.push({ label: this.translate('deflection'), value: `${this.structuralAnalysis.deflection.toFixed(2)} ${this.translate('unitMm')}` });
+      rows.push({ label: this.translate('bucklingLoad'), value: `${this.structuralAnalysis.bucklingLoad.toFixed(0)} ${this.translate('unitKN')}` });
+      rows.push({ label: this.translate('naturalFrequency'), value: `${this.structuralAnalysis.naturalFrequency.toFixed(2)} ${this.translate('unitHz')}` });
+    }
+
+    return rows;
+  }
+
+  /**
+   * Build styled HTML for PDF export (like the screenshot)
+   */
+  private buildExportHTML(): string {
+    const rows = this.getExportRows();
+    const title = this.translate('title').replace(/🏗️\s*/, '');
+    const paramHeader = this.translate('export.parameter');
+    const valueHeader = this.translate('export.value');
+
+    const tableRows = rows.map(r => `
+      <tr>
+        <td style="padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.15); color: #e0e0e0; font-size: 15px;">${r.label}</td>
+        <td style="padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.15); color: #ffffff; font-size: 15px; text-align: right; font-weight: 500;">${r.value}</td>
+      </tr>
+    `).join('');
+
+    // Recommendations section
+    let recsHTML = '';
+    if (this.recommendations && this.recommendations.length > 0) {
+      const recRows = this.recommendations.map(rec => `
+        <tr>
+          <td style="padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.15); color: #e0e0e0; font-size: 14px;">${rec.title}</td>
+          <td style="padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.15); color: #ffffff; font-size: 14px;">${rec.description}</td>
+        </tr>
+      `).join('');
+
+      recsHTML = `
+        <h2 style="color: #333; margin: 40px 0 15px; font-size: 22px;">${this.translate('export.recommendations')}</h2>
+        <table style="width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+          <thead>
+            <tr style="background: linear-gradient(135deg, #1a1a3e 0%, #2d2d5e 100%);">
+              <th style="padding: 14px 20px; color: #c8a84e; font-size: 16px; font-weight: 600; text-align: left;">${this.translate('export.title')}</th>
+              <th style="padding: 14px 20px; color: #c8a84e; font-size: 16px; font-weight: 600; text-align: left;">${this.translate('export.description')}</th>
+            </tr>
+          </thead>
+          <tbody style="background: linear-gradient(180deg, #2a3a5c 0%, #1e2d4a 100%);">
+            ${recRows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <style>
+    @media print {
+      body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #3a6186 0%, #c8955a 100%);
+      margin: 0; padding: 40px;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center; color: #1a1a3e; font-size: 28px; font-weight: 700; margin-bottom: 30px;">${title}</h1>
+  
+  <table style="width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+    <thead>
+      <tr style="background: linear-gradient(135deg, #1a1a3e 0%, #2d2d5e 100%);">
+        <th style="padding: 14px 20px; color: #c8a84e; font-size: 16px; font-weight: 600; text-align: left;">${paramHeader}</th>
+        <th style="padding: 14px 20px; color: #c8a84e; font-size: 16px; font-weight: 600; text-align: right;">${valueHeader}</th>
+      </tr>
+    </thead>
+    <tbody style="background: linear-gradient(180deg, #2a3a5c 0%, #1e2d4a 100%);">
+      ${tableRows}
+    </tbody>
+  </table>
+
+  ${recsHTML}
+
+  <p style="text-align: center; color: #555; margin-top: 30px; font-size: 12px;">
+    ${new Date().toLocaleDateString(this.currentLanguage === 'hy' ? 'hy-AM' : this.currentLanguage === 'en' ? 'en-US' : 'ru-RU')}
+  </p>
+</body>
+</html>`;
+  }
+
+  /**
    * Экспорт результатов в различных форматах
    */
   exportResults(format: 'pdf' | 'excel' | 'word' | 'json'): void {
     if (!this.calculationResult) return;
-    
+
+    switch (format) {
+      case 'json':
+        this.exportToJSON();
+        break;
+      case 'pdf':
+        this.exportToPDF();
+        break;
+      case 'excel':
+        this.exportToExcel();
+        break;
+      case 'word':
+        this.exportToWord();
+        break;
+    }
+  }
+
+  private exportToJSON(): void {
+    if (!this.calculationResult) return;
     const data = {
       type: this.calculationResult.type,
       equation: this.calculationResult.equation,
       parameters: this.calculationResult.parameters,
       measurements: this.calculationResult.measurements,
-      materialEstimate: this.calculationResult.materialEstimate,
+      materialEstimate: {
+        material: this.calculationResult.materialEstimate.material.name,
+        quantity: this.calculationResult.materialEstimate.quantity,
+        weight: this.calculationResult.materialEstimate.weight,
+        totalCost: this.calculationResult.materialEstimate.totalCost
+      },
       structuralAnalysis: this.structuralAnalysis,
+      recommendations: this.recommendations?.map(r => ({
+        type: r.type, severity: r.severity, title: r.title,
+        description: r.description, suggestion: r.suggestion
+      })),
       timestamp: new Date().toISOString()
     };
-    
-    switch (format) {
-      case 'json':
-        this.exportToJSON(data);
-        break;
-      case 'pdf':
-        this.exportToPDF(data);
-        break;
-      case 'excel':
-        this.exportToExcel(data);
-        break;
-      case 'word':
-        this.exportToWord(data);
-        break;
-    }
-  }
-
-  private exportToJSON(data: any): void {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     this.downloadFile(blob, `architectural_calculation_${this.selectedCurveType}_${Date.now()}.json`);
   }
 
-  private exportToPDF(data: any): void {
-    const doc = new jsPDF.jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = 20;
-
-    // Заголовок
-    doc.setFontSize(18);
-    doc.text(this.translate('title'), pageWidth / 2, yPos, { align: 'center' });
-    yPos += 10;
-
-    doc.setFontSize(12);
-    const curveTypeName = this.calculationResult?.type === 'parabola' ? this.translate('parabola') :
-                          this.calculationResult?.type === 'ellipse' ? this.translate('ellipse') :
-                          this.calculationResult?.type === 'hyperbola' ? this.translate('hyperbola') :
-                          this.translate('export.unknown');
-    doc.text(`${this.translate('export.curveType')} ${curveTypeName}`, 15, yPos);
-    yPos += 10;
-
-    // Уравнение
-    doc.text(`${this.translate('export.equation')} ${this.calculationResult?.equation || 'N/A'}`, 15, yPos);
-    yPos += 15;
-
-    // Измерения
-    if (this.calculationResult?.measurements) {
-      doc.setFontSize(14);
-      doc.text(this.translate('export.measurements'), 15, yPos);
-      yPos += 8;
-      doc.setFontSize(11);
-      doc.text(`${this.translate('area')} ${this.calculationResult.measurements.area.toFixed(2)} м²`, 15, yPos);
-      yPos += 8;
-      doc.text(`${this.translate('arcLength')} ${this.calculationResult.measurements.arcLength.toFixed(2)} м`, 15, yPos);
-      yPos += 8;
-      doc.text(`${this.translate('volume')} ${this.calculationResult.measurements.volume.toFixed(2)} м³`, 15, yPos);
-      yPos += 15;
+  private exportToPDF(): void {
+    const html = this.buildExportHTML();
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 600);
     }
-
-    // Материалы
-    if (this.calculationResult?.materialEstimate) {
-      doc.setFontSize(14);
-      doc.text(this.translate('export.materialEstimate'), 15, yPos);
-      yPos += 8;
-      doc.setFontSize(11);
-      doc.text(`${this.translate('export.material')} ${this.getMaterialName(this.calculationResult.materialEstimate.material.name)}`, 15, yPos);
-      yPos += 8;
-      doc.text(`${this.translate('export.quantity')} ${this.calculationResult.materialEstimate.quantity.toFixed(2)} м³`, 15, yPos);
-      yPos += 8;
-      doc.text(`${this.translate('export.weight')} ${this.calculationResult.materialEstimate.weight.toFixed(0)} кг`, 15, yPos);
-      yPos += 8;
-      const costText = this.getPriceWithCurrency(this.calculationResult.materialEstimate.totalCost);
-      doc.text(`${this.translate('export.cost')} ${costText}`, 15, yPos);
-      yPos += 15;
-    }
-
-    // Структурный анализ
-    if (this.structuralAnalysis) {
-      const tableData = [
-        [this.translate('maxStress'), `${this.structuralAnalysis.maxStress.toFixed(2)} МПа`],
-        [this.translate('safetyFactor'), this.structuralAnalysis.safetyFactor.toFixed(2)],
-        [this.translate('deflection'), `${this.structuralAnalysis.deflection.toFixed(2)} мм`],
-        [this.translate('bucklingLoad'), `${this.structuralAnalysis.bucklingLoad.toFixed(0)} Н`],
-        [this.translate('naturalFrequency'), `${this.structuralAnalysis.naturalFrequency.toFixed(2)} Гц`]
-      ];
-
-      (doc as any).autoTable({
-        head: [[this.translate('export.parameter'), this.translate('export.value')]],
-        body: tableData,
-        startY: yPos,
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [41, 128, 185] }
-      });
-    }
-
-    // Сохранение
-    const filename = `architectural_calculation_${this.selectedCurveType}_${Date.now()}.pdf`;
-    doc.save(filename);
   }
 
-  private exportToExcel(data: any): void {
+  private exportToExcel(): void {
+    if (!this.calculationResult) return;
     const wb = XLSX.utils.book_new();
+    const rows = this.getExportRows();
 
-    // Лист с основными данными
-    const curveTypeName = this.calculationResult?.type === 'parabola' ? this.translate('parabola') :
-                          this.calculationResult?.type === 'ellipse' ? this.translate('ellipse') :
-                          this.calculationResult?.type === 'hyperbola' ? this.translate('hyperbola') :
-                          this.translate('export.unknown');
-    const mainData = [
-      [this.translate('title')],
-      [this.translate('export.curveType'), curveTypeName],
-      [this.translate('export.equation'), this.calculationResult?.equation || 'N/A'],
+    // Main data sheet
+    const mainData: (string | number)[][] = [
+      [this.translate('title').replace(/🏗️\s*/, '')],
       [],
-      [this.translate('export.measurements')],
-      [`${this.translate('area')} (м²)`, this.calculationResult?.measurements.area || 0],
-      [`${this.translate('arcLength')} (м)`, this.calculationResult?.measurements.arcLength || 0],
-      [`${this.translate('volume')} (м³)`, this.calculationResult?.measurements.volume || 0],
-      [],
-      [this.translate('materials')],
-      [this.translate('export.material'), this.getMaterialName(this.calculationResult?.materialEstimate?.material?.name || '') || 'N/A'],
-      [`${this.translate('export.quantity')} (м³)`, this.calculationResult?.materialEstimate.quantity || 0],
-      [`${this.translate('export.weight')} (кг)`, this.calculationResult?.materialEstimate.weight || 0],
-      [`${this.translate('export.cost')} (${this.translate('currency')})`, 
-        this.currentLanguage === 'hy' ? this.convertToDrams(this.calculationResult?.materialEstimate.totalCost || 0) :
-        this.currentLanguage === 'en' ? this.convertToDollars(this.calculationResult?.materialEstimate.totalCost || 0) :
-        (this.calculationResult?.materialEstimate.totalCost || 0)]
+      [this.translate('export.parameter'), this.translate('export.value')]
     ];
+    rows.forEach(r => mainData.push([r.label, r.value]));
 
     const ws = XLSX.utils.aoa_to_sheet(mainData);
-    XLSX.utils.book_append_sheet(wb, ws, this.translate('export.measurements'));
+    // Set column widths
+    ws['!cols'] = [{ wch: 35 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, ws, this.translate('results').replace(':', ''));
 
-    // Лист со структурным анализом
-    if (this.structuralAnalysis) {
-      const analysisData = [
-        [this.translate('export.structuralAnalysis')],
-        [`${this.translate('maxStress')} (МПа)`, this.structuralAnalysis.maxStress],
-        [this.translate('safetyFactor'), this.structuralAnalysis.safetyFactor],
-        [`${this.translate('deflection')} (мм)`, this.structuralAnalysis.deflection],
-        [`${this.translate('bucklingLoad')} (Н)`, this.structuralAnalysis.bucklingLoad],
-        [`${this.translate('naturalFrequency')} (Гц)`, this.structuralAnalysis.naturalFrequency]
-      ];
-      const wsAnalysis = XLSX.utils.aoa_to_sheet(analysisData);
-      XLSX.utils.book_append_sheet(wb, wsAnalysis, this.translate('export.structuralAnalysis'));
-    }
-
-    // Лист с рекомендациями
+    // Recommendations sheet
     if (this.recommendations && this.recommendations.length > 0) {
-      const recommendationsData = [
+      const recData: string[][] = [
         [this.translate('export.recommendations')],
-        [this.translate('export.type'), this.translate('export.title'), this.translate('export.description'), 
-         this.translate('export.current'), this.translate('export.recommended'), this.translate('recommendation')]
+        [],
+        [this.translate('export.title'), this.translate('export.description'), this.translate('recommendation')]
       ];
-      
       this.recommendations.forEach(rec => {
-        recommendationsData.push([
-          rec.type,
-          rec.title,
-          rec.description,
-          rec.currentValue !== undefined && rec.currentValue !== null ? String(rec.currentValue) : '',
-          rec.recommendedValue !== undefined && rec.recommendedValue !== null ? String(rec.recommendedValue) : '',
-          rec.suggestion || ''
-        ]);
+        recData.push([rec.title, rec.description, rec.suggestion || '']);
       });
-
-      const wsRec = XLSX.utils.aoa_to_sheet(recommendationsData);
+      const wsRec = XLSX.utils.aoa_to_sheet(recData);
+      wsRec['!cols'] = [{ wch: 35 }, { wch: 50 }, { wch: 50 }];
       XLSX.utils.book_append_sheet(wb, wsRec, this.translate('export.recommendations'));
     }
 
-    // Сохранение
     const filename = `architectural_calculation_${this.selectedCurveType}_${Date.now()}.xlsx`;
     XLSX.writeFile(wb, filename);
   }
 
-  private async exportToWord(data: any): Promise<void> {
+  private async exportToWord(): Promise<void> {
     if (!this.calculationResult) return;
+    const rows = this.getExportRows();
 
-    const children: any[] = [];
+    const DARK_BG = '1A1A3E';
+    const GOLD_TEXT = 'C8A84E';
 
-    // Заголовок
-    children.push(
-      new Paragraph({
-        text: this.translate('title'),
-        heading: HeadingLevel.TITLE,
-        alignment: AlignmentType.CENTER
+    // Header row for tables
+    const headerRow = new TableRow({
+      children: [
+        new TableCell({
+          children: [new Paragraph({ children: [new TextRun({ text: this.translate('export.parameter'), bold: true, color: GOLD_TEXT, font: 'Segoe UI', size: 24 })] })],
+          width: { size: 50, type: WidthType.PERCENTAGE },
+          shading: { type: ShadingType.CLEAR, fill: DARK_BG }
+        }),
+        new TableCell({
+          children: [new Paragraph({ children: [new TextRun({ text: this.translate('export.value'), bold: true, color: GOLD_TEXT, font: 'Segoe UI', size: 24 })], alignment: AlignmentType.RIGHT })],
+          width: { size: 50, type: WidthType.PERCENTAGE },
+          shading: { type: ShadingType.CLEAR, fill: DARK_BG }
+        })
+      ]
+    });
+
+    // Data rows
+    const dataRows = rows.map(r =>
+      new TableRow({
+        children: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: r.label, font: 'Segoe UI', size: 22 })] })],
+            borders: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } }
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: r.value, font: 'Segoe UI', size: 22 })], alignment: AlignmentType.RIGHT })],
+            borders: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } }
+          })
+        ]
       })
     );
 
-    // Тип кривой
-    const curveTypeName = this.calculationResult.type === 'parabola' ? this.translate('parabola') :
-                          this.calculationResult.type === 'ellipse' ? this.translate('ellipse') :
-                          this.calculationResult.type === 'hyperbola' ? this.translate('hyperbola') :
-                          this.translate('export.unknown');
-    children.push(
+    const children: (Paragraph | Table)[] = [
+      // Title
       new Paragraph({
-        text: `${this.translate('export.curveType')} ${curveTypeName}`,
-        heading: HeadingLevel.HEADING_1
-      })
-    );
+        children: [new TextRun({ text: this.translate('title').replace(/🏗️\s*/, ''), bold: true, font: 'Segoe UI', size: 36 })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 400 }
+      }),
+      // Main table
+      new Table({ rows: [headerRow, ...dataRows] })
+    ];
 
-    // Уравнение
-    children.push(
-      new Paragraph({
-        text: `${this.translate('export.equation')} ${this.calculationResult.equation || 'N/A'}`,
-        spacing: { after: 200 }
-      })
-    );
-
-    // Измерения
-    if (this.calculationResult.measurements) {
-      children.push(
-        new Paragraph({
-          text: this.translate('export.measurements'),
-          heading: HeadingLevel.HEADING_2
-        })
-      );
-
-      const measurementsTable = new Table({
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph(this.translate('export.parameter'))],
-                width: { size: 50, type: WidthType.PERCENTAGE }
-              }),
-              new TableCell({
-                children: [new Paragraph(this.translate('export.value'))],
-                width: { size: 50, type: WidthType.PERCENTAGE }
-              })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph(this.translate('area'))]
-              }),
-              new TableCell({
-                children: [new Paragraph(`${this.calculationResult.measurements.area.toFixed(2)} м²`)]
-              })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph(this.translate('arcLength'))]
-              }),
-              new TableCell({
-                children: [new Paragraph(`${this.calculationResult.measurements.arcLength.toFixed(2)} м`)]
-              })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({
-                children: [new Paragraph(this.translate('volume'))]
-              }),
-              new TableCell({
-                children: [new Paragraph(`${this.calculationResult.measurements.volume.toFixed(2)} м³`)]
-              })
-            ]
-          })
-        ]
-      });
-
-      children.push(measurementsTable);
-    }
-
-    // Материалы
-    if (this.calculationResult.materialEstimate) {
-      children.push(
-        new Paragraph({
-          text: this.translate('export.materialEstimate'),
-          heading: HeadingLevel.HEADING_2
-        })
-      );
-
-      const materialTable = new Table({
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('export.parameter'))] }),
-              new TableCell({ children: [new Paragraph(this.translate('export.value'))] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('export.material'))] }),
-              new TableCell({ children: [new Paragraph(this.getMaterialName(this.calculationResult.materialEstimate.material.name))] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('export.quantity'))] }),
-              new TableCell({ children: [new Paragraph(`${this.calculationResult.materialEstimate.quantity.toFixed(2)} м³`)] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('export.weight'))] }),
-              new TableCell({ children: [new Paragraph(`${this.calculationResult.materialEstimate.weight.toFixed(0)} кг`)] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('export.cost'))] }),
-              new TableCell({ children: [new Paragraph(this.getPriceWithCurrency(this.calculationResult.materialEstimate.totalCost))] })
-            ]
-          })
-        ]
-      });
-
-      children.push(materialTable);
-    }
-
-    // Структурный анализ
-    if (this.structuralAnalysis) {
-      children.push(
-        new Paragraph({
-          text: this.translate('export.structuralAnalysis'),
-          heading: HeadingLevel.HEADING_2
-        })
-      );
-
-      const analysisTable = new Table({
-        rows: [
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('export.parameter'))] }),
-              new TableCell({ children: [new Paragraph(this.translate('export.value'))] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('maxStress'))] }),
-              new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.maxStress.toFixed(2)} МПа`)] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('safetyFactor'))] }),
-              new TableCell({ children: [new Paragraph(this.structuralAnalysis.safetyFactor.toFixed(2))] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('deflection'))] }),
-              new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.deflection.toFixed(2)} мм`)] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('bucklingLoad'))] }),
-              new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.bucklingLoad.toFixed(0)} Н`)] })
-            ]
-          }),
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(this.translate('naturalFrequency'))] }),
-              new TableCell({ children: [new Paragraph(`${this.structuralAnalysis.naturalFrequency.toFixed(2)} Гц`)] })
-            ]
-          })
-        ]
-      });
-
-      children.push(analysisTable);
-    }
-
-    // Рекомендации
+    // Recommendations
     if (this.recommendations && this.recommendations.length > 0) {
       children.push(
         new Paragraph({
-          text: this.translate('export.recommendations'),
-          heading: HeadingLevel.HEADING_2
+          children: [new TextRun({ text: this.translate('export.recommendations'), bold: true, font: 'Segoe UI', size: 28 })],
+          spacing: { before: 400, after: 200 }
         })
       );
 
-      const recRows: any[] = [
-        new TableRow({
-          children: [
-            new TableCell({ children: [new Paragraph(this.translate('export.type'))] }),
-            new TableCell({ children: [new Paragraph(this.translate('export.title'))] }),
-            new TableCell({ children: [new Paragraph(this.translate('export.description'))] }),
-            new TableCell({ children: [new Paragraph(this.translate('export.current'))] }),
-            new TableCell({ children: [new Paragraph(this.translate('export.recommended'))] })
-          ]
-        })
-      ];
-
-      this.recommendations.forEach(rec => {
-        recRows.push(
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph(rec.type)] }),
-              new TableCell({ children: [new Paragraph(rec.title)] }),
-              new TableCell({ children: [new Paragraph(rec.description)] }),
-              new TableCell({ 
-                children: [new Paragraph(rec.currentValue !== undefined && rec.currentValue !== null ? String(rec.currentValue) : '')] 
-              }),
-              new TableCell({ 
-                children: [new Paragraph(rec.recommendedValue !== undefined && rec.recommendedValue !== null ? String(rec.recommendedValue) : '')] 
-              })
-            ]
+      const recHeaderRow = new TableRow({
+        children: [
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: this.translate('export.title'), bold: true, color: GOLD_TEXT, font: 'Segoe UI', size: 22 })] })],
+            shading: { type: ShadingType.CLEAR, fill: DARK_BG }
+          }),
+          new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: this.translate('export.description'), bold: true, color: GOLD_TEXT, font: 'Segoe UI', size: 22 })] })],
+            shading: { type: ShadingType.CLEAR, fill: DARK_BG }
           })
-        );
+        ]
       });
 
-      children.push(
-        new Table({
-          rows: recRows
+      const recDataRows = this.recommendations.map(rec =>
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: rec.title, font: 'Segoe UI', size: 20 })] })],
+              borders: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } }
+            }),
+            new TableCell({
+              children: [new Paragraph({ children: [new TextRun({ text: rec.description, font: 'Segoe UI', size: 20 })] })],
+              borders: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } }
+            })
+          ]
         })
       );
+
+      children.push(new Table({ rows: [recHeaderRow, ...recDataRows] }));
     }
 
-    // Создаем документ
-    const doc = new Document({
-      sections: [{
-        children: children
-      }]
-    });
+    // Date
+    children.push(
+      new Paragraph({
+        children: [new TextRun({
+          text: new Date().toLocaleDateString(this.currentLanguage === 'hy' ? 'hy-AM' : this.currentLanguage === 'en' ? 'en-US' : 'ru-RU'),
+          font: 'Segoe UI', size: 18, color: '888888'
+        })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 400 }
+      })
+    );
 
-    // Генерируем и сохраняем файл
+    const doc = new Document({ sections: [{ children }] });
     const blob = await Packer.toBlob(doc);
-    const filename = `architectural_calculation_${this.selectedCurveType}_${Date.now()}.docx`;
-    saveAs(blob, filename);
+    saveAs(blob, `architectural_calculation_${this.selectedCurveType}_${Date.now()}.docx`);
   }
 
   private downloadFile(blob: Blob, filename: string): void {
@@ -908,7 +794,9 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   }
 

@@ -61,29 +61,6 @@
         <span class="letter">e</span>
       </span>
     </h1>
-  </div>
-
-  <div class="content-section">
-    <p class="welcome-text">Welcome to our workspace!</p>
-    <p class="description">Here you can start working with our application.</p>
-
-    <!-- QR Code для доступа через Wi-Fi -->
-    <div class="qr-code-section">
-      <div class="qr-code-container" *ngIf="qrCodeImageUrl">
-        <img
-          [src]="qrCodeImageUrl"
-          alt="QR Code"
-          class="qr-code-image"
-          (error)="onQrCodeError($event)"
-          (load)="onQrCodeLoad()" />
-      </div>
-      <div class="qr-code-container" *ngIf="!qrCodeImageUrl">
-        <div class="qr-loading">Loading QR Code...</div>
-      </div>
-      <button class="qr-refresh-btn" (click)="refreshQRCode()">
-        🔄 Refresh QR Code
-      </button>
-    </div>
 <div>
     <button class="nav-button mb-4" (click)="navigateToApp()">
       <span class="button-text">Go to Application</span>

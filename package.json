@@ -35,8 +35,6 @@
     "@types/three": "^0.180.0",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
-    "jspdf": "^3.0.3",
-    "jspdf-autotable": "^5.0.2",
     "rxjs": "~7.8.0",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",

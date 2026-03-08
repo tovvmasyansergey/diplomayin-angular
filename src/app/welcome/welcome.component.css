@@ -642,7 +642,7 @@
 
   .nav-auth {
     gap: 0.5rem;
-    margin-left: 1rem;
+    margin: auto;
   }
 
   .nav-link {
