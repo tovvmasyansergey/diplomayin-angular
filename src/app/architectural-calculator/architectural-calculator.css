@@ -527,9 +527,9 @@
 /* Адаптивность */
 @media (max-width: 768px) {
   .calculator-container {
-    padding: 1rem;
+    padding: 5rem;
   }
-  
+
   .calculator-title {
     font-size: 2rem;
   }
@@ -543,28 +543,28 @@
     font-size: 0.8rem;
     padding: 0.4rem 0.8rem;
   }
-  
+
   .curve-tabs {
     grid-template-columns: 1fr;
   }
-  
+
   .parameter-group {
     grid-template-columns: 1fr;
   }
-  
+
   .material-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
-  
+
   .results-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .btn-calculate, .btn-reset {
     width: 100%;
     max-width: 300px;

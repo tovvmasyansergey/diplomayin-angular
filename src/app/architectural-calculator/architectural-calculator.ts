@@ -2,9 +2,8 @@ import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef } from '
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalculationResult, Material, StructuralAnalysis, Recommendation } from './interfaces/architectural.interface';
-import { ArchitecturalCalculationsService } from './services/architectural-calculations.service';
-import { MaterialCalculatorService } from './services/material-calculator.service';
 import { RecommendationService } from './services/recommendation.service';
+import { ArchitecturalCalculatorApiService } from './services/architectural-calculator-api.service';
 import { TranslationService, Language } from './services/translation.service';
 import * as XLSX from 'xlsx';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType } from 'docx';
@@ -51,17 +50,25 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
   currentLanguage: Language = 'ru';
 
   constructor(
-    private calculationsService: ArchitecturalCalculationsService,
-    private materialService: MaterialCalculatorService,
+    private calculatorApiService: ArchitecturalCalculatorApiService,
     private recommendationService: RecommendationService,
     public translationService: TranslationService,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
-    this.materials = this.materialService.getAllMaterials();
-    this.selectedMaterial = this.materials[0]; // Бетон по умолчанию
     this.currentLanguage = this.translationService.getLanguage();
+    this.calculatorApiService.getMaterials().subscribe({
+      next: (materials) => {
+        this.materials = materials;
+        this.selectedMaterial = this.materials[0] || null;
+      },
+      error: (error) => {
+        console.error('Ошибка загрузки материалов:', error);
+        this.materials = [];
+        this.selectedMaterial = null;
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -75,12 +82,17 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
   onCurveTypeChange(): void {
     this.showResults = false;
     this.calculationResult = null;
-    
-    // Обновляем предложения материалов
-    const suggestedMaterials = this.materialService.getMaterialSuggestions(this.selectedCurveType);
-    if (suggestedMaterials.length > 0) {
-      this.selectedMaterial = suggestedMaterials[0];
-    }
+
+    this.calculatorApiService.getMaterialSuggestions(this.selectedCurveType).subscribe({
+      next: (suggestedMaterials) => {
+        if (suggestedMaterials.length > 0) {
+          this.selectedMaterial = suggestedMaterials[0];
+        }
+      },
+      error: (error) => {
+        console.error('Ошибка загрузки предложений материалов:', error);
+      }
+    });
   }
 
   translate(key: string): string {
@@ -123,10 +135,6 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     this.currentLanguage = lang;
     // Принудительно обновляем представление
     this.cdr.detectChanges();
-    // Если есть результаты, перегенерируем рекомендации с новым языком
-    if (this.showResults && this.calculationResult && this.structuralAnalysis) {
-      this.generateRecommendations();
-    }
   }
 
   getCurrentLanguage(): Language {
@@ -139,48 +147,62 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
       return;
     }
 
-    try {
-      switch (this.selectedCurveType) {
-        case 'parabola':
-          this.calculationResult = this.calculationsService.calculateParabola(
-            this.parabolaParams.span,
-            this.parabolaParams.height,
-            this.parabolaParams.thickness,
-            this.selectedMaterial
-          );
-          break;
-          
-        case 'ellipse':
-          this.calculationResult = this.calculationsService.calculateEllipse(
-            this.ellipseParams.a,
-            this.ellipseParams.b,
-            this.ellipseParams.thickness,
-            this.selectedMaterial
-          );
-          break;
-          
-        case 'hyperbola':
-          this.calculationResult = this.calculationsService.calculateHyperbola(
-            this.hyperbolaParams.a,
-            this.hyperbolaParams.b,
-            this.hyperbolaParams.thickness,
-            this.selectedMaterial
-          );
-          break;
+    const request = this.buildCalculationRequest();
+
+    this.calculatorApiService.calculate(request).subscribe({
+      next: (response) => {
+        this.calculationResult = response.calculationResult;
+        this.structuralAnalysis = response.structuralAnalysis;
+        this.recommendations = response.recommendations || [];
+        this.showResults = true;
+      },
+      error: (error) => {
+        console.error('Ошибка расчета:', error);
+        alert(this.translate('calculationError'));
       }
-      
-      this.showResults = true;
-      
-      // Выполняем структурный анализ
-      this.performStructuralAnalysis();
-      
-      // Генерируем рекомендации
-      this.generateRecommendations();
-      
-    } catch (error) {
-      console.error('Ошибка расчета:', error);
-      alert(this.translate('calculationError'));
+    });
+  }
+
+  private buildCalculationRequest(): {
+    curveType: 'parabola' | 'ellipse' | 'hyperbola';
+    language: 'ru' | 'en' | 'hy';
+    materialName: string;
+    span?: number;
+    height?: number;
+    thickness?: number;
+    a?: number;
+    b?: number;
+  } {
+    if (this.selectedCurveType === 'parabola') {
+      return {
+        curveType: this.selectedCurveType,
+        language: this.currentLanguage,
+        materialName: this.selectedMaterial!.name,
+        span: this.parabolaParams.span,
+        height: this.parabolaParams.height,
+        thickness: this.parabolaParams.thickness
+      };
     }
+
+    if (this.selectedCurveType === 'ellipse') {
+      return {
+        curveType: this.selectedCurveType,
+        language: this.currentLanguage,
+        materialName: this.selectedMaterial!.name,
+        a: this.ellipseParams.a,
+        b: this.ellipseParams.b,
+        thickness: this.ellipseParams.thickness
+      };
+    }
+
+    return {
+      curveType: this.selectedCurveType,
+      language: this.currentLanguage,
+      materialName: this.selectedMaterial!.name,
+      a: this.hyperbolaParams.a,
+      b: this.hyperbolaParams.b,
+      thickness: this.hyperbolaParams.thickness
+    };
   }
 
   resetCalculation(): void {

@@ -27,11 +27,11 @@
           [id]="user.id"
           (click)="userItemClick(user)">
           <div class="user-avatar">
-            <img *ngIf="user.profilePicture" [src]="getImageUrl(user.profilePicture)" [alt]="user.firstName + ' ' + user.lastName" class="user-photo" (error)="onImageError($event)">
-            <span *ngIf="!user.profilePicture">{{ user.firstName?.charAt(0) || 'U' }}</span>
+            <img *ngIf="user.profilePicture" [src]="getImageUrl(user.profilePicture)" [alt]="getUserFirstName(user) + ' ' + getUserLastName(user)" class="user-photo" (error)="onImageError($event)">
+            <span *ngIf="!user.profilePicture">{{ getUserInitial(user) }}</span>
           </div>
           <div class="user-info">
-            <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+            <span class="user-name">{{ getUserFirstName(user) }} {{ getUserLastName(user) }}</span>
             <span class="last-message" *ngIf="getLastMessage(user.id)">{{ getLastMessage(user.id)?.content }}</span>
           </div>
           <span class="nbr-msg hidden">0</span>
@@ -52,10 +52,10 @@
           ← Back
         </button>
         <div class="user-avatar">
-          <img *ngIf="getSelectedUser()?.profilePicture" [src]="getImageUrl(getSelectedUser()?.profilePicture)" [alt]="getSelectedUser()?.firstName + ' ' + getSelectedUser()?.lastName" class="user-photo" (error)="onImageError($event)">
-          <span *ngIf="!getSelectedUser()?.profilePicture">{{ getSelectedUser()?.firstName?.charAt(0) || 'U' }}</span>
+          <img *ngIf="getSelectedUser()?.profilePicture" [src]="getImageUrl(getSelectedUser()?.profilePicture)" [alt]="getUserFirstName(getSelectedUser()) + ' ' + getUserLastName(getSelectedUser())" class="user-photo" (error)="onImageError($event)">
+          <span *ngIf="!getSelectedUser()?.profilePicture">{{ getUserInitial(getSelectedUser()) }}</span>
         </div>
-        <span>{{ getSelectedUser()?.firstName }} {{ getSelectedUser()?.lastName }}</span>
+        <span>{{ getUserFirstName(getSelectedUser()) }} {{ getUserLastName(getSelectedUser()) }}</span>
       </div>
     </div>
 

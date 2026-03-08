@@ -248,7 +248,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     // Устанавливаем выбранного пользователя
     this.selectedUserId = user.id.toString();
-    this.selectedUserName = `${user.firstName} ${user.lastName}`;
+    this.selectedUserName = `${this.getUserFirstName(user)} ${this.getUserLastName(user)}`.trim();
 
     console.log('👤 Selected user ID:', this.selectedUserId);
     console.log('👤 Current user ID:', this.currentUser.id);
@@ -598,6 +598,19 @@ export class ChatComponent implements OnInit, OnDestroy {
     return this.allUsers.find(user => user.id.toString() === this.selectedUserId);
   }
 
+  getUserFirstName(user: any): string {
+    return (user?.firstname || user?.firstName || '').toString();
+  }
+
+  getUserLastName(user: any): string {
+    return (user?.lastname || user?.lastName || '').toString();
+  }
+
+  getUserInitial(user: any): string {
+    const firstName = this.getUserFirstName(user);
+    return firstName ? firstName.charAt(0).toUpperCase() : 'U';
+  }
+
   /**
    * Получить последнее сообщение для пользователя
    */
@@ -868,15 +881,13 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     const viewport = window.visualViewport;
     if (viewport) {
-      const chatContainer = document.querySelector('.chat-container') as HTMLElement;
       const chatPanel = document.querySelector('.chat-panel') as HTMLElement;
       
-      if (chatContainer && chatPanel) {
-        // Устанавливаем высоту контейнера на основе видимого viewport
-        const height = viewport.height;
-        chatContainer.style.height = `${height}px`;
+      if (chatPanel) {
+        // Обновляем только панель чата, чтобы сохранить внешние отступы контейнера
+        const height = Math.max(viewport.height - 16, 320);
         chatPanel.style.height = `${height}px`;
-        
+
         // Прокручиваем к последнему сообщению
         setTimeout(() => {
           const messagesContainer = document.getElementById('chat-messages');

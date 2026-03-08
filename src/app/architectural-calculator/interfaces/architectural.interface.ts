@@ -45,7 +45,7 @@ export interface CalculationResult {
     totalCost: number;
     weight: number;
   };
-  graphData: CurvePoint[];
+  graphData?: CurvePoint[];
 }
 
 export interface ArchitecturalStructure {

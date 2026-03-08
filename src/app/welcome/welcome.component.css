@@ -17,7 +17,6 @@
 /* Навигационное меню */
 .top-navigation {
   position: relative;
-  top: 2cm;
   left: 0;
   right: 0;
   display: flex;
