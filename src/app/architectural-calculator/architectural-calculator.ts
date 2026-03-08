@@ -1,13 +1,16 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CalculationResult, Material, StructuralAnalysis, Recommendation } from './interfaces/architectural.interface';
+import { CalculationResult, Material, StructuralAnalysis, Recommendation, CurvePoint } from './interfaces/architectural.interface';
 import { RecommendationService } from './services/recommendation.service';
 import { ArchitecturalCalculatorApiService } from './services/architectural-calculator-api.service';
 import { TranslationService, Language } from './services/translation.service';
 import * as XLSX from 'xlsx';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType } from 'docx';
 import { saveAs } from 'file-saver';
+import { Chart, registerables } from 'chart.js';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-architectural-calculator',
@@ -17,6 +20,9 @@ import { saveAs } from 'file-saver';
   standalone: true
 })
 export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('curveChartCanvas') curveChartCanvas?: ElementRef<HTMLCanvasElement>;
+
+  private curveChart: Chart | null = null;
   
   selectedCurveType: 'parabola' | 'ellipse' | 'hyperbola' = 'parabola';
   calculationResult: CalculationResult | null = null;
@@ -48,6 +54,8 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
   selectedMaterial: Material | null = null;
   showResults = false;
   currentLanguage: Language = 'ru';
+  isLoading = false;
+  isUnsafe = false;
 
   constructor(
     private calculatorApiService: ArchitecturalCalculatorApiService,
@@ -72,16 +80,23 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
   }
 
   ngAfterViewInit(): void {
-    // Инициализация после загрузки view
+    this.renderCurveChart();
   }
 
   ngOnDestroy(): void {
-    // Cleanup if needed
+    if (this.curveChart) {
+      this.curveChart.destroy();
+      this.curveChart = null;
+    }
   }
 
   onCurveTypeChange(): void {
     this.showResults = false;
     this.calculationResult = null;
+    this.structuralAnalysis = null;
+    this.recommendations = [];
+    this.isUnsafe = false;
+    this.renderCurveChart();
 
     this.calculatorApiService.getMaterialSuggestions(this.selectedCurveType).subscribe({
       next: (suggestedMaterials) => {
@@ -135,6 +150,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     this.currentLanguage = lang;
     // Принудительно обновляем представление
     this.cdr.detectChanges();
+    this.renderCurveChart();
   }
 
   getCurrentLanguage(): Language {
@@ -147,6 +163,7 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
       return;
     }
 
+    this.isLoading = true;
     const request = this.buildCalculationRequest();
 
     this.calculatorApiService.calculate(request).subscribe({
@@ -155,12 +172,21 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
         this.structuralAnalysis = response.structuralAnalysis;
         this.recommendations = response.recommendations || [];
         this.showResults = true;
+        this.updateSafetyState();
+        this.renderCurveChart();
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Ошибка расчета:', error);
         alert(this.translate('calculationError'));
+        this.isUnsafe = false;
+        this.isLoading = false;
       }
     });
+  }
+
+  onInputParametersChange(): void {
+    this.renderCurveChart();
   }
 
   private buildCalculationRequest(): {
@@ -210,6 +236,143 @@ export class ArchitecturalCalculatorComponent implements OnInit, AfterViewInit, 
     this.structuralAnalysis = null;
     this.recommendations = [];
     this.showResults = false;
+    this.isUnsafe = false;
+    this.renderCurveChart();
+  }
+
+  private updateSafetyState(): void {
+    this.isUnsafe = !!this.structuralAnalysis && this.structuralAnalysis.safetyFactor < 1.5;
+  }
+
+  renderCurveChart(): void {
+    const canvas = this.curveChartCanvas?.nativeElement;
+    if (!canvas) return;
+
+    const basePoints = this.getCurvePoints();
+    const offsetPoints = this.getOffsetCurvePoints(basePoints, this.getCurrentThickness());
+
+    if (this.curveChart) {
+      this.curveChart.destroy();
+    }
+
+    this.curveChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: this.translate('equation'),
+            data: basePoints.map(p => ({ x: p.x, y: p.y })),
+            borderColor: '#fbbf24',
+            backgroundColor: 'rgba(251, 191, 36, 0.15)',
+            borderWidth: 3,
+            pointRadius: 0,
+            tension: 0.15
+          },
+          {
+            label: `${this.translate('thickness')} offset`,
+            data: offsetPoints.map(p => ({ x: p.x, y: p.y })),
+            borderColor: '#60a5fa',
+            backgroundColor: 'rgba(96, 165, 250, 0.10)',
+            borderDash: [8, 6],
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.15
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 500 },
+        scales: {
+          x: {
+            type: 'linear',
+            title: { display: true, text: 'X (m)', color: '#e5e7eb' },
+            ticks: { color: '#e5e7eb' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          },
+          y: {
+            title: { display: true, text: 'Y (m)', color: '#e5e7eb' },
+            ticks: { color: '#e5e7eb' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: '#f3f4f6' }
+          }
+        }
+      }
+    });
+  }
+
+  private getCurvePoints(): CurvePoint[] {
+    if (this.calculationResult?.graphData?.length) {
+      return this.calculationResult.graphData;
+    }
+
+    if (this.selectedCurveType === 'parabola') {
+      const span = this.parabolaParams.span;
+      const height = this.parabolaParams.height;
+      const k = 4 * height / (span * span);
+      const points: CurvePoint[] = [];
+      const segments = 160;
+      for (let i = 0; i <= segments; i++) {
+        const x = (span * i) / segments;
+        const y = k * x * (span - x);
+        points.push({ x, y });
+      }
+      return points;
+    }
+
+    if (this.selectedCurveType === 'ellipse') {
+      const { a, b } = this.ellipseParams;
+      const points: CurvePoint[] = [];
+      const segments = 180;
+      for (let i = 0; i <= segments; i++) {
+        const t = (2 * Math.PI * i) / segments;
+        points.push({ x: a * Math.cos(t), y: b * Math.sin(t) });
+      }
+      return points;
+    }
+
+    const { a, b } = this.hyperbolaParams;
+    const points: CurvePoint[] = [];
+    const tMin = -1.2;
+    const tMax = 1.2;
+    const segments = 90;
+    for (let i = 0; i <= segments; i++) {
+      const t = tMin + ((tMax - tMin) * i) / segments;
+      points.push({ x: a * Math.cosh(t), y: b * Math.sinh(t) });
+    }
+    for (let i = segments; i >= 0; i--) {
+      const t = tMin + ((tMax - tMin) * i) / segments;
+      points.push({ x: -a * Math.cosh(t), y: b * Math.sinh(t) });
+    }
+    return points;
+  }
+
+  private getOffsetCurvePoints(points: CurvePoint[], thickness: number): CurvePoint[] {
+    if (points.length < 3) return points;
+    return points.map((point, index) => {
+      const prev = points[Math.max(0, index - 1)];
+      const next = points[Math.min(points.length - 1, index + 1)];
+      const tx = next.x - prev.x;
+      const ty = next.y - prev.y;
+      const length = Math.hypot(tx, ty) || 1;
+      const nx = -ty / length;
+      const ny = tx / length;
+      return {
+        x: point.x + nx * thickness,
+        y: point.y + ny * thickness
+      };
+    });
+  }
+
+  private getCurrentThickness(): number {
+    if (this.selectedCurveType === 'parabola') return this.parabolaParams.thickness;
+    if (this.selectedCurveType === 'ellipse') return this.ellipseParams.thickness;
+    return this.hyperbolaParams.thickness;
   }
 
   getCurveTypeDescription(): string {

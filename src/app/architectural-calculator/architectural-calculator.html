@@ -74,6 +74,7 @@
             type="number" 
             id="span" 
             [(ngModel)]="parabolaParams.span" 
+            (ngModelChange)="onInputParametersChange()"
             min="1" 
             max="200"
             step="0.1">
@@ -86,6 +87,7 @@
             type="number" 
             id="height" 
             [(ngModel)]="parabolaParams.height" 
+            (ngModelChange)="onInputParametersChange()"
             min="0.1" 
             max="50"
             step="0.1">
@@ -98,6 +100,7 @@
             type="number" 
             id="thickness" 
             [(ngModel)]="parabolaParams.thickness" 
+            (ngModelChange)="onInputParametersChange()"
             min="0.01" 
             max="5"
             step="0.01">
@@ -113,6 +116,7 @@
             type="number" 
             id="a" 
             [(ngModel)]="ellipseParams.a" 
+            (ngModelChange)="onInputParametersChange()"
             min="1" 
             max="100"
             step="0.1">
@@ -125,6 +129,7 @@
             type="number" 
             id="b" 
             [(ngModel)]="ellipseParams.b" 
+            (ngModelChange)="onInputParametersChange()"
             min="0.1" 
             max="50"
             step="0.1">
@@ -137,6 +142,7 @@
             type="number" 
             id="thickness" 
             [(ngModel)]="ellipseParams.thickness" 
+            (ngModelChange)="onInputParametersChange()"
             min="0.01" 
             max="5"
             step="0.01">
@@ -152,6 +158,7 @@
             type="number" 
             id="a" 
             [(ngModel)]="hyperbolaParams.a" 
+            (ngModelChange)="onInputParametersChange()"
             min="0.1" 
             max="50"
             step="0.1">
@@ -164,6 +171,7 @@
             type="number" 
             id="b" 
             [(ngModel)]="hyperbolaParams.b" 
+            (ngModelChange)="onInputParametersChange()"
             min="0.1" 
             max="50"
             step="0.1">
@@ -176,6 +184,7 @@
             type="number" 
             id="thickness" 
             [(ngModel)]="hyperbolaParams.thickness" 
+            (ngModelChange)="onInputParametersChange()"
             min="0.01" 
             max="5"
             step="0.01">
@@ -204,9 +213,9 @@
 
     <!-- Кнопки управления -->
     <div class="action-buttons">
-      <button class="btn-calculate" (click)="calculate()">
+      <button class="btn-calculate" (click)="calculate()" [disabled]="isLoading">
         <span class="btn-icon">🧮</span>
-        {{ translate('calculate') }}
+        {{ isLoading ? (translate('calculate') + '...') : translate('calculate') }}
       </button>
       
       <button class="btn-reset" (click)="resetCalculation()">
@@ -215,8 +224,27 @@
       </button>
     </div>
 
+    <div class="chart-section">
+      <h2>📈 {{ translate('measurements') }}</h2>
+      <div class="chart-container">
+        <canvas id="curveChart" #curveChartCanvas></canvas>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="results-section skeleton-results">
+      <h2>{{ translate('results') }}</h2>
+      <div class="results-grid">
+        <div class="result-card skeleton-card" *ngFor="let i of [1,2,3,4]">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Результаты -->
-    <div *ngIf="showResults && calculationResult" class="results-section">
+    <div *ngIf="showResults && calculationResult && !isLoading" class="results-section" [class.status-critical]="isUnsafe">
       <h2>{{ translate('results') }}</h2>
       
       <div class="results-grid">
@@ -290,7 +318,12 @@
         </div>
 
         <!-- Структурный анализ -->
-        <div *ngIf="structuralAnalysis" class="result-card structural-card">
+        <div
+          *ngIf="structuralAnalysis"
+          class="result-card structural-card"
+          [class.status-critical]="structuralAnalysis.safetyFactor < 1.5"
+          [class.status-warning]="structuralAnalysis.safetyFactor >= 1.5 && structuralAnalysis.safetyFactor < 2"
+          [class.status-safe]="structuralAnalysis.safetyFactor >= 2">
           <h3>🏗️ {{ translate('structuralAnalysis') }}</h3>
           <div class="analysis-item">
             <span class="label">{{ translate('maxStress') }}</span>

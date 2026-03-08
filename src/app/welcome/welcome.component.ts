@@ -18,6 +18,12 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean = false;
   currentUser: any = null;
 
+  private readonly ellipseInfoTexts: Record<'hy' | 'ru' | 'en', string> = {
+    hy: 'Սահմանում։ Էլիպս է կոչվում հարթության այն կետերի երկրաչափական տեղը, որոնց հեռավորությունների գումարը տրված երկու F1 և F2 կետերից հաստատուն է և մեծ է F1F2 հատվածի երկարությունից։ Էլիպսի հատկությունները՝ Համաչափություն. Եթե (x; y) կետը պատկանում է էլիպսին, ապա (x; -y), (-x; y) և (-x; -y) կետերը ևս պատկանում են էլիպսին։ Այսինքն՝ էլիպսը համաչափ է OX և OY առանցքների, ինչպես նաև O սկզբնակետի նկատմամբ։ Սահմանափակություն. Հավասարումից հետևում է, որ |x|<=a, |y|<=b։ Ուստի էլիպսը սահմանափակ կոր է և գտնվում է -a<=x<=a, -b<=y<=b ուղղանկյան ներսում։ Այն կոչվում է էլիպսի հիմնական ուղղանկյուն։',
+    ru: 'Определение. Эллипс - это геометрическое место точек плоскости, для которых сумма расстояний до двух фиксированных точек F1 и F2 постоянна и больше длины отрезка F1F2. Свойства эллипса: Симметрия. Если точка (x; y) принадлежит эллипсу, то точки (x; -y), (-x; y) и (-x; -y) также принадлежат ему. Значит, эллипс симметричен относительно осей OX и OY, а также относительно начала координат O. Ограниченность. Из уравнения следует, что |x|<=a, |y|<=b. Поэтому эллипс является ограниченной кривой и расположен внутри прямоугольника -a<=x<=a, -b<=y<=b. Этот прямоугольник называется основным прямоугольником эллипса.',
+    en: 'Definition. An ellipse is the locus of points in a plane for which the sum of distances to two fixed points F1 and F2 is constant and greater than the length of segment F1F2. Ellipse properties: Symmetry. If point (x, y) belongs to the ellipse, then (x, -y), (-x, y), and (-x, -y) also belong to it. Therefore, the ellipse is symmetric with respect to the OX and OY axes and also with respect to the origin O. Boundedness. From the equation it follows that |x|<=a, |y|<=b. Hence, the ellipse is a bounded curve located inside the rectangle -a<=x<=a, -b<=y<=b. This rectangle is called the principal rectangle of the ellipse.'
+  };
+
   private routerSub?: Subscription;
 
   constructor(
@@ -125,4 +131,13 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   navigateToAllUsers() {
     this.router.navigate(['/all-users']);
   }
+
+  get ellipseInfoCards(): { code: 'HY' | 'RU' | 'EN'; text: string }[] {
+    return [
+      { code: 'HY', text: this.ellipseInfoTexts.hy },
+      { code: 'RU', text: this.ellipseInfoTexts.ru },
+      { code: 'EN', text: this.ellipseInfoTexts.en }
+    ];
+  }
+
 }

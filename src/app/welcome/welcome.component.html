@@ -49,10 +49,20 @@
         <span class="letter">e</span>
       </span>
     </h1>
-<div>
-    <button class="nav-button mb-4" (click)="navigateToApp()">
-      <span class="button-text">Go to Application</span>
-      <span class="button-icon">→</span>
-    </button>
-</div> </div>
+    <div>
+      <button class="nav-button mb-4" (click)="navigateToApp()">
+        <span class="button-text">Go to Application</span>
+        <span class="button-icon">→</span>
+      </button>
+    </div>
+
+    <section class="ellipse-cards-section">
+      <div class="ellipse-cards-grid">
+        <article class="ellipse-info-card" *ngFor="let card of ellipseInfoCards">
+          <div class="ellipse-info-card-label">Ellipse · {{ card.code }}</div>
+          <p class="ellipse-info-card-text">{{ card.text }}</p>
+        </article>
+      </div>
+    </section>
+  </div>
 </div>
